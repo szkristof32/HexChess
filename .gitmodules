@@ -1,0 +1,3 @@
+[submodule "ChessEngine/vendor/GLFW"]
+	path = ChessEngine/vendor/GLFW
+	url = https://github.com/glfw/glfw

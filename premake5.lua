@@ -7,7 +7,11 @@ workspace "HexChess"
 	language "C++"
 	cppdialect "C++23"
 
-	solution_items { ".editorconfig" }
+	solution_items
+	{
+		".editorconfig",
+		"premake5.lua"
+	}
 
 	configurations
 	{
@@ -30,6 +34,10 @@ workspace "HexChess"
 		optimize "full"
 		defines "RELEASE"
 
+group "Dependencies"
+	include "ChessEngine/vendor/GLFW"
+group ""
+
 project "ChessEngine"
 	location "%{prj.name}"
 	kind "StaticLib"
@@ -48,7 +56,14 @@ project "ChessEngine"
 
 	includedirs
 	{
-		"%{prj.name}/src"
+		"%{prj.name}/src",
+
+		"ChessEngine/vendor/GLFW/include"
+	}
+
+	links
+	{
+		"GLFW"
 	}
 
 project "HexChess"

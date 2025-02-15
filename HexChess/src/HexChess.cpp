@@ -1,6 +1,11 @@
 #include <iostream>
 
+#include <ChessEngine/Core/Engine.h>
+
+using namespace ChessEngine;
+
 int main(int argc, char** argv)
 {
-	std::cout << "Hello world!\n";
+	Engine engine;
+	engine.Run();
 }
