@@ -1,8 +1,9 @@
 #pragma once
 
-#include "ChessEngine/Core/Window.h"
-
 namespace ChessEngine {
+
+	class Window;
+	class Renderer;
 
 	class Engine
 	{
@@ -13,6 +14,8 @@ namespace ChessEngine {
 		void Run();
 	private:
 		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<Renderer> m_Renderer;
+		
 		bool m_Running = false;
 	};
 

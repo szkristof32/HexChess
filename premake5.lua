@@ -1,5 +1,7 @@
 include "premake/solution_items.lua"
 
+VULKAN_SDK = os.getenv("VULKAN_SDK")
+
 workspace "HexChess"
 	startproject "HexChess"
 
@@ -10,7 +12,8 @@ workspace "HexChess"
 	solution_items
 	{
 		".editorconfig",
-		"premake5.lua"
+		"premake5.lua",
+		"Dependencies.lua"
 	}
 
 	configurations
@@ -34,9 +37,7 @@ workspace "HexChess"
 		optimize "full"
 		defines "RELEASE"
 
-group "Dependencies"
-	include "ChessEngine/vendor/GLFW"
-group ""
+include "Dependencies.lua"
 
 project "ChessEngine"
 	location "%{prj.name}"
@@ -58,13 +59,25 @@ project "ChessEngine"
 	{
 		"%{prj.name}/src",
 
-		"ChessEngine/vendor/GLFW/include"
+		"ChessEngine/vendor/GLFW/include",
+		"%{VULKAN_SDK}/Include"
 	}
 
 	links
 	{
 		"GLFW"
 	}
+
+	libdirs
+	{
+		"%{VULKAN_SDK}/Lib"
+	}
+
+	filter "system:windows"
+		links "vulkan-1"
+
+	filter "system:linux"
+		links "vulkan"
 
 project "HexChess"
 	location "%{prj.name}"
