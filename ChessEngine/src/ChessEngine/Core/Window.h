@@ -13,6 +13,7 @@ namespace ChessEngine {
 		void Update() const;
 
 		bool ShouldClose() const;
+		GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
 	private:
 		GLFWwindow* m_WindowHandle;
 	};

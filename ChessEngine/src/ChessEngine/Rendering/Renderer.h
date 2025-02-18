@@ -1,19 +1,19 @@
 #pragma once
 
-#include "ChessEngine/Rendering/RendererBackend.h"
+#include "ChessEngine/Rendering/RendererContext.h"
 
 namespace ChessEngine {
 
 	class Renderer
 	{
 	public:
-		Renderer();
+		Renderer(GLFWwindow* windowHandle);
 		~Renderer();
 
 		void BeginFrame();
 		void EndFrame();
 	private:
-		std::unique_ptr<RendererBackend> m_RendererBackend;
+		std::unique_ptr<RendererContext> m_RendererContext;
 	};
 
 }

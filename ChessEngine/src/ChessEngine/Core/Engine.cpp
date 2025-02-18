@@ -9,7 +9,7 @@ namespace ChessEngine {
 	Engine::Engine()
 	{
 		m_Window = std::make_unique<Window>(1280, 720, "HexChess");
-		m_Renderer = std::make_unique<Renderer>();
+		m_Renderer = std::make_unique<Renderer>(m_Window->GetWindowHandle());
 
 		m_Running = true;
 	}

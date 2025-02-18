@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.h>
 
+struct GLFWwindow;
+
 namespace ChessEngine {
 
 	struct QueueFamilyIndices
@@ -11,11 +13,11 @@ namespace ChessEngine {
 		bool IsComplete() { return GraphicsFamily.has_value(); }
 	};
 
-	class RendererBackend
+	class RendererContext
 	{
 	public:
-		RendererBackend();
-		~RendererBackend();
+		RendererContext(GLFWwindow* windowHandle);
+		~RendererContext();
 
 		void BeginFrame();
 		void EndFrame();
@@ -23,6 +25,7 @@ namespace ChessEngine {
 		void CreateInstance();
 		void PickPhysicalDevice();
 		void CreateDevice();
+		void CreateSurface(GLFWwindow* windowHandle);
 
 		std::vector<const char*> GetInstanceExtensions();
 		std::vector<const char*> GetDeviceExtensions();
@@ -41,6 +44,7 @@ namespace ChessEngine {
 		VkInstance m_Instance;
 		VkPhysicalDevice m_PhysicalDevice;
 		VkDevice m_Device;
+		VkSurfaceKHR m_Surface;
 
 		VkQueue m_GraphicsQueue;
 		uint32_t m_GraphicsQueueFamily;

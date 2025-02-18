@@ -3,9 +3,9 @@
 
 namespace ChessEngine {
 
-	Renderer::Renderer()
+	Renderer::Renderer(GLFWwindow* windowHandle)
 	{
-		m_RendererBackend = std::make_unique<RendererBackend>();
+		m_RendererContext = std::make_unique<RendererContext>(windowHandle);
 	}
 
 	Renderer::~Renderer()
@@ -14,12 +14,12 @@ namespace ChessEngine {
 
 	void Renderer::BeginFrame()
 	{
-		m_RendererBackend->BeginFrame();
+		m_RendererContext->BeginFrame();
 	}
 
 	void Renderer::EndFrame()
 	{
-		m_RendererBackend->EndFrame();
+		m_RendererContext->EndFrame();
 	}
 
 }

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "RendererBackend.h"
+#include "RendererContext.h"
 
 #include "VulkanUtils.h"
 
@@ -30,30 +30,32 @@ namespace ChessEngine {
 		return false;
 	}
 
-	RendererBackend::RendererBackend()
+	RendererContext::RendererContext(GLFWwindow* windowHandle)
 	{
 		CreateInstance();
 		CreateDebugMessenger();
+		CreateSurface(windowHandle);
 		PickPhysicalDevice();
 		CreateDevice();
 	}
 
-	RendererBackend::~RendererBackend()
+	RendererContext::~RendererContext()
 	{
 		vkDestroyDevice(m_Device, nullptr);
+		vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 		DestroyDebugMessenger();
 		vkDestroyInstance(m_Instance, nullptr);
 	}
 
-	void RendererBackend::BeginFrame()
+	void RendererContext::BeginFrame()
 	{
 	}
 
-	void RendererBackend::EndFrame()
+	void RendererContext::EndFrame()
 	{
 	}
 
-	void RendererBackend::CreateInstance()
+	void RendererContext::CreateInstance()
 	{
 #ifdef DEBUG
 		if (!CheckValidationLayer())
@@ -89,7 +91,7 @@ namespace ChessEngine {
 		VK_CHECK(vkCreateInstance(&instanceInfo, nullptr, &m_Instance));
 	}
 
-	void RendererBackend::PickPhysicalDevice()
+	void RendererContext::PickPhysicalDevice()
 	{
 		uint32_t deviceCount;
 		vkEnumeratePhysicalDevices(m_Instance, &deviceCount, nullptr);
@@ -106,7 +108,7 @@ namespace ChessEngine {
 		}
 	}
 
-	void RendererBackend::CreateDevice()
+	void RendererContext::CreateDevice()
 	{
 		QueueFamilyIndices indices = FindQueueFamilies(m_PhysicalDevice);
 		float queuePriority = 1.0f;
@@ -132,7 +134,12 @@ namespace ChessEngine {
 		m_GraphicsQueueFamily = *indices.GraphicsFamily;
 	}
 
-	std::vector<const char*> RendererBackend::GetInstanceExtensions()
+	void RendererContext::CreateSurface(GLFWwindow* windowHandle)
+	{
+		glfwCreateWindowSurface(m_Instance, windowHandle, nullptr, &m_Surface);
+	}
+
+	std::vector<const char*> RendererContext::GetInstanceExtensions()
 	{
 		std::vector<const char*> extensions = {
 #ifdef DEBUG
@@ -150,14 +157,14 @@ namespace ChessEngine {
 		return extensions;
 	}
 
-	std::vector<const char*> RendererBackend::GetDeviceExtensions()
+	std::vector<const char*> RendererContext::GetDeviceExtensions()
 	{
 		std::vector<const char*> extensions = {
 		};
 		return extensions;
 	}
 
-	std::vector<const char*> RendererBackend::GetValidationLayers()
+	std::vector<const char*> RendererContext::GetValidationLayers()
 	{
 		std::vector<const char*> validationLayers = {
 #ifdef DEBUG
@@ -167,14 +174,14 @@ namespace ChessEngine {
 		return validationLayers;
 	}
 
-	bool RendererBackend::IsDeviceSuitable(VkPhysicalDevice device)
+	bool RendererContext::IsDeviceSuitable(VkPhysicalDevice device)
 	{
 		QueueFamilyIndices indices = FindQueueFamilies(device);
 
 		return indices.IsComplete();
 	}
 
-	QueueFamilyIndices RendererBackend::FindQueueFamilies(VkPhysicalDevice device)
+	QueueFamilyIndices RendererContext::FindQueueFamilies(VkPhysicalDevice device)
 	{
 		QueueFamilyIndices indices{};
 
@@ -197,7 +204,7 @@ namespace ChessEngine {
 
 #ifdef DEBUG
 
-	void RendererBackend::CreateDebugMessenger()
+	void RendererContext::CreateDebugMessenger()
 	{
 		auto messengerInfo = DebugMessengerInfo();
 
@@ -206,14 +213,14 @@ namespace ChessEngine {
 			vkCreateDebugUtilsMessengerEXT(m_Instance, &messengerInfo, nullptr, &m_DebugMessenger);
 	}
 
-	void RendererBackend::DestroyDebugMessenger()
+	void RendererContext::DestroyDebugMessenger()
 	{
 		auto vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (vkDestroyDebugUtilsMessengerEXT)
 			vkDestroyDebugUtilsMessengerEXT(m_Instance, m_DebugMessenger, nullptr);
 	}
 
-	bool RendererBackend::CheckValidationLayer()
+	bool RendererContext::CheckValidationLayer()
 	{
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -240,7 +247,7 @@ namespace ChessEngine {
 		return true;
 	}
 
-	VkDebugUtilsMessengerCreateInfoEXT RendererBackend::DebugMessengerInfo()
+	VkDebugUtilsMessengerCreateInfoEXT RendererContext::DebugMessengerInfo()
 	{
 		VkDebugUtilsMessengerCreateInfoEXT messengerInfo{};
 		messengerInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
