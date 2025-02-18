@@ -103,6 +103,8 @@ namespace ChessEngine {
 			if (IsDeviceSuitable(device))
 			{
 				m_PhysicalDevice = device;
+				m_SwapchainFormat = QuerySwapchainFormatInfo(m_PhysicalDevice);
+
 				break;
 			}
 		}
@@ -160,6 +162,7 @@ namespace ChessEngine {
 	std::vector<const char*> RendererContext::GetDeviceExtensions()
 	{
 		std::vector<const char*> extensions = {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
 		};
 		return extensions;
 	}
@@ -177,8 +180,9 @@ namespace ChessEngine {
 	bool RendererContext::IsDeviceSuitable(VkPhysicalDevice device)
 	{
 		QueueFamilyIndices indices = FindQueueFamilies(device);
+		SwapchainFormatInfo swapchainInfo = QuerySwapchainFormatInfo(device);
 
-		return indices.IsComplete();
+		return indices.IsComplete() && swapchainInfo.IsAdequate() && CheckSupportedExtensions(device);
 	}
 
 	QueueFamilyIndices RendererContext::FindQueueFamilies(VkPhysicalDevice device)
@@ -191,8 +195,10 @@ namespace ChessEngine {
 		vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
 		int i = 0;
-		for (const auto& queueFamily : queueFamilies) {
-			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+		for (const auto& queueFamily : queueFamilies)
+		{
+			if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			{
 				indices.GraphicsFamily = i;
 			}
 
@@ -200,6 +206,51 @@ namespace ChessEngine {
 		}
 
 		return indices;
+	}
+
+	bool RendererContext::CheckSupportedExtensions(VkPhysicalDevice device)
+	{
+		uint32_t extensionCount;
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+		vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+		auto deviceExtensions = GetDeviceExtensions();
+		std::set<std::string_view> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+		for (const auto& extension : availableExtensions)
+		{
+			requiredExtensions.erase(extension.extensionName);
+		}
+
+		return requiredExtensions.empty();
+	}
+
+	SwapchainFormatInfo RendererContext::QuerySwapchainFormatInfo(VkPhysicalDevice device)
+	{
+		SwapchainFormatInfo info{};
+
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_Surface, &info.Capabilities);
+
+		uint32_t formatCount;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface, &formatCount, nullptr);
+
+		if (formatCount != 0)
+		{
+			info.Formats.resize(formatCount);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_Surface, &formatCount, info.Formats.data());
+		}
+
+		uint32_t presentModeCount;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface, &presentModeCount, nullptr);
+
+		if (presentModeCount != 0)
+		{
+			info.PresentModes.resize(presentModeCount);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_Surface, &presentModeCount, info.PresentModes.data());
+		}
+
+		return info;
 	}
 
 #ifdef DEBUG

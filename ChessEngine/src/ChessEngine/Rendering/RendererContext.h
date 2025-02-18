@@ -10,7 +10,16 @@ namespace ChessEngine {
 	{
 		std::optional<uint32_t> GraphicsFamily;
 
-		bool IsComplete() { return GraphicsFamily.has_value(); }
+		bool IsComplete() const { return GraphicsFamily.has_value(); }
+	};
+
+	struct SwapchainFormatInfo
+	{
+		VkSurfaceCapabilitiesKHR Capabilities;
+		std::vector<VkSurfaceFormatKHR> Formats;
+		std::vector<VkPresentModeKHR> PresentModes;
+
+		bool IsAdequate() const { return !Formats.empty() && !PresentModes.empty(); }
 	};
 
 	class RendererContext
@@ -21,6 +30,15 @@ namespace ChessEngine {
 
 		void BeginFrame();
 		void EndFrame();
+
+		VkInstance GetInstance() const { return m_Instance; }
+		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+		VkDevice GetDevice() const { return m_Device; }
+		VkSurfaceKHR GetSurface() const { return m_Surface; }
+
+		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
+		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamily; }
+		const SwapchainFormatInfo& GetSwapchainFormatInfo() const { return m_SwapchainFormat; }
 	private:
 		void CreateInstance();
 		void PickPhysicalDevice();
@@ -33,6 +51,8 @@ namespace ChessEngine {
 
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+		bool CheckSupportedExtensions(VkPhysicalDevice device);
+		SwapchainFormatInfo QuerySwapchainFormatInfo(VkPhysicalDevice device);
 
 #ifdef DEBUG
 		void CreateDebugMessenger();
@@ -48,6 +68,7 @@ namespace ChessEngine {
 
 		VkQueue m_GraphicsQueue;
 		uint32_t m_GraphicsQueueFamily;
+		SwapchainFormatInfo m_SwapchainFormat;
 
 #ifdef DEBUG
 		VkDebugUtilsMessengerEXT m_DebugMessenger;

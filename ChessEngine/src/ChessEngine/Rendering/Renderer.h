@@ -1,8 +1,11 @@
 #pragma once
 
-#include "ChessEngine/Rendering/RendererContext.h"
+struct GLFWwindow;
 
 namespace ChessEngine {
+
+	class RendererContext;
+	class RendererBackend;
 
 	class Renderer
 	{
@@ -13,7 +16,8 @@ namespace ChessEngine {
 		void BeginFrame();
 		void EndFrame();
 	private:
-		std::unique_ptr<RendererContext> m_RendererContext;
+		std::shared_ptr<RendererContext> m_RendererContext;
+		std::unique_ptr<RendererBackend> m_RendererBackend;
 	};
 
 }
