@@ -15,6 +15,11 @@ namespace ChessEngine {
 
 	RendererBackend::~RendererBackend()
 	{
+		for (const auto& imageView : m_SwapchainImageViews)
+		{
+			vkDestroyImageView(m_Context->GetDevice(), imageView, nullptr);
+		}
+
 		vkDestroySwapchainKHR(m_Context->GetDevice(), m_Swapchain, nullptr);
 	}
 
@@ -34,13 +39,15 @@ namespace ChessEngine {
 		VkPresentModeKHR presentMode = ChoosePresentMode(swapchainFormat.PresentModes);
 		VkExtent2D extent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
 
+		m_SwapchainFormat = surfaceFormat.format;
+
 		uint32_t imageCount = swapchainFormat.Capabilities.minImageCount + 1;
 		if (swapchainFormat.Capabilities.maxImageCount > 0 &&
 			imageCount > swapchainFormat.Capabilities.maxImageCount)
 		{
 			imageCount = swapchainFormat.Capabilities.maxImageCount;
 		}
-
+		
 		std::set<uint32_t> queueFamilyIndices = { m_Context->GetGraphicsQueueFamilyIndex() };
 		std::vector<uint32_t> indices(queueFamilyIndices.begin(), queueFamilyIndices.end());
 
@@ -63,6 +70,32 @@ namespace ChessEngine {
 		swapchainInfo.oldSwapchain = nullptr;
 
 		VK_CHECK(vkCreateSwapchainKHR(m_Context->GetDevice(), &swapchainInfo, nullptr, &m_Swapchain));
+
+		GetImageResources();
+	}
+
+	void RendererBackend::GetImageResources()
+	{
+		vkGetSwapchainImagesKHR(m_Context->GetDevice(), m_Swapchain, &m_SwapchainImageCount, nullptr);
+		m_SwapchainImages.resize(m_SwapchainImageCount);
+		vkGetSwapchainImagesKHR(m_Context->GetDevice(), m_Swapchain, &m_SwapchainImageCount, m_SwapchainImages.data());
+
+		m_SwapchainImageViews.resize(m_SwapchainImageCount);
+		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
+		{
+			VkImageViewCreateInfo imageViewInfo{};
+			imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			imageViewInfo.image = m_SwapchainImages[i];
+			imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			imageViewInfo.format = m_SwapchainFormat;
+			imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			imageViewInfo.subresourceRange.baseMipLevel = 0;
+			imageViewInfo.subresourceRange.levelCount = 1;
+			imageViewInfo.subresourceRange.baseArrayLayer = 0;
+			imageViewInfo.subresourceRange.layerCount = 1;
+
+			VK_CHECK(vkCreateImageView(m_Context->GetDevice(), &imageViewInfo, nullptr, &m_SwapchainImageViews[i]));
+		}
 	}
 
 	VkSurfaceFormatKHR RendererBackend::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
