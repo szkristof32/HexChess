@@ -21,16 +21,55 @@ namespace ChessEngine {
 			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
 		}
 
+		vkDestroyCommandPool(m_Context->GetDevice(), m_CommandPool, nullptr);
+
 		vkDestroyRenderPass(m_Context->GetDevice(), m_SwapchainRenderPass, nullptr);
 		vkDestroySwapchainKHR(m_Context->GetDevice(), m_Swapchain, nullptr);
 	}
 
 	void RendererBackend::BeginFrame()
 	{
+		VkCommandBufferBeginInfo commandBufferBegin{};
+		commandBufferBegin.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
+
+		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffer, &commandBufferBegin));
+
+		VkClearValue clearColour{};
+		clearColour.color = { 1.0f, 0.0f, 1.0f, 1.0f };
+
+		VkRenderPassBeginInfo renderPassBegin{};
+		renderPassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBegin.renderPass = m_SwapchainRenderPass;
+		renderPassBegin.framebuffer = m_SwapchainFramebuffers[m_ImageIndex];
+		renderPassBegin.renderArea.offset = { 0, 0 };
+		renderPassBegin.renderArea.extent = m_SwapchainExtent;
+		renderPassBegin.clearValueCount = 1;
+		renderPassBegin.pClearValues = &clearColour;
+
+		vkCmdBeginRenderPass(m_CommandBuffer, &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float)m_SwapchainExtent.width;
+		viewport.height = (float)m_SwapchainExtent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		vkCmdSetViewport(m_CommandBuffer, 0, 1, &viewport);
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = m_SwapchainExtent;
+
+		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
 	}
 
 	void RendererBackend::EndFrame()
 	{
+		vkCmdEndRenderPass(m_CommandBuffer);
+		
+		VK_CHECK(vkEndCommandBuffer(m_CommandBuffer));
 	}
 
 	void RendererBackend::RecreateSwapchain()
@@ -77,6 +116,7 @@ namespace ChessEngine {
 		GetImageResources();
 		CreateSwapchainRenderPass();
 		CreateFramebuffers();
+		CreateCommandBuffers();
 	}
 
 	void RendererBackend::GetImageResources()
@@ -151,6 +191,24 @@ namespace ChessEngine {
 
 			VK_CHECK(vkCreateFramebuffer(m_Context->GetDevice(), &framebufferInfo, nullptr, &m_SwapchainFramebuffers[i]));
 		}
+	}
+
+	void RendererBackend::CreateCommandBuffers()
+	{
+		VkCommandPoolCreateInfo commandPoolInfo{};
+		commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		commandPoolInfo.queueFamilyIndex = m_Context->GetGraphicsQueueFamilyIndex();
+
+		VK_CHECK(vkCreateCommandPool(m_Context->GetDevice(), &commandPoolInfo, nullptr, &m_CommandPool));
+
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.commandPool = m_CommandPool;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandBufferCount = 1;
+
+		VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &m_CommandBuffer));
 	}
 
 	VkSurfaceFormatKHR RendererBackend::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
