@@ -15,9 +15,10 @@ namespace ChessEngine {
 
 	RendererBackend::~RendererBackend()
 	{
-		for (const auto& imageView : m_SwapchainImageViews)
+		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
-			vkDestroyImageView(m_Context->GetDevice(), imageView, nullptr);
+			vkDestroyImageView(m_Context->GetDevice(), m_SwapchainImageViews[i], nullptr);
+			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
 		}
 
 		vkDestroyRenderPass(m_Context->GetDevice(), m_SwapchainRenderPass, nullptr);
@@ -41,6 +42,7 @@ namespace ChessEngine {
 		VkExtent2D extent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
 
 		m_SwapchainFormat = surfaceFormat.format;
+		m_SwapchainExtent = extent;
 
 		uint32_t imageCount = swapchainFormat.Capabilities.minImageCount + 1;
 		if (swapchainFormat.Capabilities.maxImageCount > 0 &&
@@ -48,7 +50,7 @@ namespace ChessEngine {
 		{
 			imageCount = swapchainFormat.Capabilities.maxImageCount;
 		}
-		
+
 		std::set<uint32_t> queueFamilyIndices = { m_Context->GetGraphicsQueueFamilyIndex() };
 		std::vector<uint32_t> indices(queueFamilyIndices.begin(), queueFamilyIndices.end());
 
@@ -74,6 +76,7 @@ namespace ChessEngine {
 
 		GetImageResources();
 		CreateSwapchainRenderPass();
+		CreateFramebuffers();
 	}
 
 	void RendererBackend::GetImageResources()
@@ -129,6 +132,25 @@ namespace ChessEngine {
 		renderPassInfo.pSubpasses = &subpass;
 
 		VK_CHECK(vkCreateRenderPass(m_Context->GetDevice(), &renderPassInfo, nullptr, &m_SwapchainRenderPass));
+	}
+
+	void RendererBackend::CreateFramebuffers()
+	{
+		m_SwapchainFramebuffers.resize(m_SwapchainImageCount);
+
+		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
+		{
+			VkFramebufferCreateInfo framebufferInfo{};
+			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+			framebufferInfo.renderPass = m_SwapchainRenderPass;
+			framebufferInfo.attachmentCount = 1;
+			framebufferInfo.pAttachments = &m_SwapchainImageViews[i];
+			framebufferInfo.width = m_SwapchainExtent.width;
+			framebufferInfo.height = m_SwapchainExtent.height;
+			framebufferInfo.layers = 1;
+
+			VK_CHECK(vkCreateFramebuffer(m_Context->GetDevice(), &framebufferInfo, nullptr, &m_SwapchainFramebuffers[i]));
+		}
 	}
 
 	VkSurfaceFormatKHR RendererBackend::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)
