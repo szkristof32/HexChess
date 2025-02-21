@@ -14,6 +14,8 @@ namespace ChessEngine {
 
 		void BeginFrame();
 		void EndFrame();
+
+		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
 	private:
 		void RecreateSwapchain();
 		void GetImageResources();

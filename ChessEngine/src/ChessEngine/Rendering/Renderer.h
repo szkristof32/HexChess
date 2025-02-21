@@ -7,6 +7,9 @@ namespace ChessEngine {
 	class RendererContext;
 	class RendererBackend;
 
+	struct PipelineSpecification;
+	class Pipeline;
+
 	class Renderer
 	{
 	public:
@@ -15,9 +18,11 @@ namespace ChessEngine {
 
 		void BeginFrame();
 		void EndFrame();
+
+		inline std::shared_ptr<Pipeline> CreatePipeline(const PipelineSpecification& spec);
 	private:
 		std::shared_ptr<RendererContext> m_RendererContext;
-		std::unique_ptr<RendererBackend> m_RendererBackend;
+		std::shared_ptr<RendererBackend> m_RendererBackend;
 	};
 
 }
