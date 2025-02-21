@@ -17,6 +17,7 @@ namespace ChessEngine {
 	private:
 		void RecreateSwapchain();
 		void GetImageResources();
+		void CreateSwapchainRenderPass();
 
 		VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
@@ -31,6 +32,8 @@ namespace ChessEngine {
 		uint32_t m_SwapchainImageCount = 0;
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
+
+		VkRenderPass m_SwapchainRenderPass;
 	};
 
 }
