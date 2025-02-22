@@ -19,9 +19,12 @@ namespace ChessEngine {
 	{
 		vkDeviceWaitIdle(m_Context->GetDevice());
 
-		vkDestroyFence(m_Context->GetDevice(), m_FrameInFlight, nullptr);
-		vkDestroySemaphore(m_Context->GetDevice(), m_RenderFinished, nullptr);
-		vkDestroySemaphore(m_Context->GetDevice(), m_ImageAvailable, nullptr);
+		for (uint32_t i = 0;i < RendererBackend::MaxFramesInFlight;i++)
+		{
+			vkDestroyFence(m_Context->GetDevice(), m_FrameInFlight[i], nullptr);
+			vkDestroySemaphore(m_Context->GetDevice(), m_RenderFinished[i], nullptr);
+			vkDestroySemaphore(m_Context->GetDevice(), m_ImageAvailable[i], nullptr);
+		}
 
 		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
@@ -37,16 +40,16 @@ namespace ChessEngine {
 
 	void RendererBackend::BeginFrame()
 	{
-		vkWaitForFences(m_Context->GetDevice(), 1, &m_FrameInFlight, true, std::numeric_limits<uint64_t>::max());
-		vkResetFences(m_Context->GetDevice(), 1, &m_FrameInFlight);
+		vkWaitForFences(m_Context->GetDevice(), 1, &m_FrameInFlight[m_FrameIndex], true, std::numeric_limits<uint64_t>::max());
+		vkResetFences(m_Context->GetDevice(), 1, &m_FrameInFlight[m_FrameIndex]);
 
-		vkAcquireNextImageKHR(m_Context->GetDevice(), m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable, nullptr, &m_ImageIndex);
+		vkAcquireNextImageKHR(m_Context->GetDevice(), m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable[m_FrameIndex], nullptr, &m_ImageIndex);
 
 		VkCommandBufferBeginInfo commandBufferBegin{};
 		commandBufferBegin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		VK_CHECK(vkResetCommandBuffer(m_CommandBuffer, 0));
-		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffer, &commandBufferBegin));
+		VK_CHECK(vkResetCommandBuffer(m_CommandBuffers[m_FrameIndex], 0));
+		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffers[m_FrameIndex], &commandBufferBegin));
 
 		VkClearValue clearColour{};
 		clearColour.color = { 1.0f, 0.0f, 1.0f, 1.0f };
@@ -60,7 +63,7 @@ namespace ChessEngine {
 		renderPassBegin.clearValueCount = 1;
 		renderPassBegin.pClearValues = &clearColour;
 
-		vkCmdBeginRenderPass(m_CommandBuffer, &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(m_CommandBuffers[m_FrameIndex], &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
@@ -70,54 +73,56 @@ namespace ChessEngine {
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
-		vkCmdSetViewport(m_CommandBuffer, 0, 1, &viewport);
+		vkCmdSetViewport(m_CommandBuffers[m_FrameIndex], 0, 1, &viewport);
 
 		VkRect2D scissor{};
 		scissor.offset = { 0, 0 };
 		scissor.extent = m_SwapchainExtent;
 
-		vkCmdSetScissor(m_CommandBuffer, 0, 1, &scissor);
+		vkCmdSetScissor(m_CommandBuffers[m_FrameIndex], 0, 1, &scissor);
 	}
 
 	void RendererBackend::EndFrame()
 	{
-		vkCmdEndRenderPass(m_CommandBuffer);
-		
-		VK_CHECK(vkEndCommandBuffer(m_CommandBuffer));
+		vkCmdEndRenderPass(m_CommandBuffers[m_FrameIndex]);
+
+		VK_CHECK(vkEndCommandBuffer(m_CommandBuffers[m_FrameIndex]));
 
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_ImageAvailable;
+		submitInfo.pWaitSemaphores = &m_ImageAvailable[m_FrameIndex];
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_CommandBuffer;
+		submitInfo.pCommandBuffers = &m_CommandBuffers[m_FrameIndex];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_RenderFinished;
+		submitInfo.pSignalSemaphores = &m_RenderFinished[m_FrameIndex];
 
-		VK_CHECK(vkQueueSubmit(m_Context->GetGraphicsQueue(), 1, &submitInfo, m_FrameInFlight));
+		VK_CHECK(vkQueueSubmit(m_Context->GetGraphicsQueue(), 1, &submitInfo, m_FrameInFlight[m_FrameIndex]));
 
 		VkPresentInfoKHR presentInfo{};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_RenderFinished;
+		presentInfo.pWaitSemaphores = &m_RenderFinished[m_FrameIndex];
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &m_Swapchain;
 		presentInfo.pImageIndices = &m_ImageIndex;
 
 		VK_CHECK(vkQueuePresentKHR(m_Context->GetGraphicsQueue(), &presentInfo));
+
+		m_FrameIndex = (m_FrameIndex + 1) % RendererBackend::MaxFramesInFlight;
 	}
 
 	void RendererBackend::BindPipeline(std::weak_ptr<Pipeline> pipeline) const
 	{
-		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.lock()->GetPipeline());
+		vkCmdBindPipeline(m_CommandBuffers[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.lock()->GetPipeline());
 	}
 
 	void RendererBackend::Draw(uint32_t vertexCount) const
 	{
-		vkCmdDraw(m_CommandBuffer, vertexCount, 1, 0, 0);
+		vkCmdDraw(m_CommandBuffers[m_FrameIndex], vertexCount, 1, 0, 0);
 	}
 
 	void RendererBackend::Reload()
@@ -255,27 +260,33 @@ namespace ChessEngine {
 
 		VK_CHECK(vkCreateCommandPool(m_Context->GetDevice(), &commandPoolInfo, nullptr, &m_CommandPool));
 
-		VkCommandBufferAllocateInfo allocInfo{};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = m_CommandPool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = 1;
+		for (uint32_t i = 0;i < RendererBackend::MaxFramesInFlight;i++)
+		{
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = m_CommandPool;
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = 1;
 
-		VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &m_CommandBuffer));
+			VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &m_CommandBuffers[i]));
+		}
 	}
 
 	void RendererBackend::CreateSyncObjects()
 	{
-		VkSemaphoreCreateInfo semaphoreInfo{};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		for (uint32_t i = 0;i < RendererBackend::MaxFramesInFlight;i++)
+		{
+			VkSemaphoreCreateInfo semaphoreInfo{};
+			semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-		VkFenceCreateInfo fenceInfo{};
-		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+			VkFenceCreateInfo fenceInfo{};
+			fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+			fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-		VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_ImageAvailable));
-		VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_RenderFinished));
-		VK_CHECK(vkCreateFence(m_Context->GetDevice(), &fenceInfo, nullptr, &m_FrameInFlight));
+			VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_ImageAvailable[i]));
+			VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_RenderFinished[i]));
+			VK_CHECK(vkCreateFence(m_Context->GetDevice(), &fenceInfo, nullptr, &m_FrameInFlight[i]));
+		}
 	}
 
 	VkSurfaceFormatKHR RendererBackend::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)

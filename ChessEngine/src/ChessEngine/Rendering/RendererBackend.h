@@ -11,6 +11,8 @@ namespace ChessEngine {
 	class RendererBackend
 	{
 	public:
+		constexpr static uint32_t MaxFramesInFlight = 2;
+	public:
 		RendererBackend(const std::shared_ptr<RendererContext>& context, GLFWwindow* windowHandle);
 		~RendererBackend();
 
@@ -43,6 +45,7 @@ namespace ChessEngine {
 
 		uint32_t m_SwapchainImageCount = 0;
 		uint32_t m_ImageIndex = 0;
+		uint32_t m_FrameIndex = 0;
 
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
@@ -52,11 +55,11 @@ namespace ChessEngine {
 		VkRenderPass m_SwapchainRenderPass;
 
 		VkCommandPool m_CommandPool;
-		VkCommandBuffer m_CommandBuffer;
+		std::array<VkCommandBuffer, MaxFramesInFlight> m_CommandBuffers;
 
-		VkSemaphore m_ImageAvailable;
-		VkSemaphore m_RenderFinished;
-		VkFence m_FrameInFlight;
+		std::array<VkSemaphore, MaxFramesInFlight> m_ImageAvailable;
+		std::array<VkSemaphore, MaxFramesInFlight> m_RenderFinished;
+		std::array<VkFence, MaxFramesInFlight> m_FrameInFlight;
 	};
 
 }
