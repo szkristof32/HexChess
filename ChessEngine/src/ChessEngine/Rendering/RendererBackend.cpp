@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "RendererBackend.h"
 
+#include "ChessEngine/Rendering/Pipeline.h"
+
 #include "VulkanUtils.h"
 
 #include <GLFW/glfw3.h>
@@ -10,11 +12,17 @@ namespace ChessEngine {
 	RendererBackend::RendererBackend(const std::shared_ptr<RendererContext>& context, GLFWwindow* windowHandle)
 		: m_Context(context), m_WindowHandle(windowHandle)
 	{
-		RecreateSwapchain();
+		Reload();
 	}
 
 	RendererBackend::~RendererBackend()
 	{
+		vkDeviceWaitIdle(m_Context->GetDevice());
+
+		vkDestroyFence(m_Context->GetDevice(), m_FrameInFlight, nullptr);
+		vkDestroySemaphore(m_Context->GetDevice(), m_RenderFinished, nullptr);
+		vkDestroySemaphore(m_Context->GetDevice(), m_ImageAvailable, nullptr);
+
 		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
 			vkDestroyImageView(m_Context->GetDevice(), m_SwapchainImageViews[i], nullptr);
@@ -29,9 +37,15 @@ namespace ChessEngine {
 
 	void RendererBackend::BeginFrame()
 	{
-		VkCommandBufferBeginInfo commandBufferBegin{};
-		commandBufferBegin.sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO;
+		vkWaitForFences(m_Context->GetDevice(), 1, &m_FrameInFlight, true, std::numeric_limits<uint64_t>::max());
+		vkResetFences(m_Context->GetDevice(), 1, &m_FrameInFlight);
 
+		vkAcquireNextImageKHR(m_Context->GetDevice(), m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable, nullptr, &m_ImageIndex);
+
+		VkCommandBufferBeginInfo commandBufferBegin{};
+		commandBufferBegin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		VK_CHECK(vkResetCommandBuffer(m_CommandBuffer, 0));
 		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffer, &commandBufferBegin));
 
 		VkClearValue clearColour{};
@@ -50,9 +64,9 @@ namespace ChessEngine {
 
 		VkViewport viewport{};
 		viewport.x = 0.0f;
-		viewport.y = 0.0f;
+		viewport.y = (float)m_SwapchainExtent.height;
 		viewport.width = (float)m_SwapchainExtent.width;
-		viewport.height = (float)m_SwapchainExtent.height;
+		viewport.height = -(float)m_SwapchainExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
@@ -70,9 +84,53 @@ namespace ChessEngine {
 		vkCmdEndRenderPass(m_CommandBuffer);
 		
 		VK_CHECK(vkEndCommandBuffer(m_CommandBuffer));
+
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_ImageAvailable;
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_CommandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_RenderFinished;
+
+		VK_CHECK(vkQueueSubmit(m_Context->GetGraphicsQueue(), 1, &submitInfo, m_FrameInFlight));
+
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &m_RenderFinished;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_Swapchain;
+		presentInfo.pImageIndices = &m_ImageIndex;
+
+		VK_CHECK(vkQueuePresentKHR(m_Context->GetGraphicsQueue(), &presentInfo));
 	}
 
-	void RendererBackend::RecreateSwapchain()
+	void RendererBackend::BindPipeline(std::weak_ptr<Pipeline> pipeline) const
+	{
+		vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.lock()->GetPipeline());
+	}
+
+	void RendererBackend::Draw(uint32_t vertexCount) const
+	{
+		vkCmdDraw(m_CommandBuffer, vertexCount, 1, 0, 0);
+	}
+
+	void RendererBackend::Reload()
+	{
+		CreateSwapchain();
+		GetImageResources();
+		CreateSwapchainRenderPass();
+		CreateFramebuffers();
+		CreateCommandBuffers();
+		CreateSyncObjects();
+	}
+
+	void RendererBackend::CreateSwapchain()
 	{
 		SwapchainFormatInfo swapchainFormat = m_Context->GetSwapchainFormatInfo();
 
@@ -112,11 +170,6 @@ namespace ChessEngine {
 		swapchainInfo.oldSwapchain = nullptr;
 
 		VK_CHECK(vkCreateSwapchainKHR(m_Context->GetDevice(), &swapchainInfo, nullptr, &m_Swapchain));
-
-		GetImageResources();
-		CreateSwapchainRenderPass();
-		CreateFramebuffers();
-		CreateCommandBuffers();
 	}
 
 	void RendererBackend::GetImageResources()
@@ -209,6 +262,20 @@ namespace ChessEngine {
 		allocInfo.commandBufferCount = 1;
 
 		VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &m_CommandBuffer));
+	}
+
+	void RendererBackend::CreateSyncObjects()
+	{
+		VkSemaphoreCreateInfo semaphoreInfo{};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		VkFenceCreateInfo fenceInfo{};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_ImageAvailable));
+		VK_CHECK(vkCreateSemaphore(m_Context->GetDevice(), &semaphoreInfo, nullptr, &m_RenderFinished));
+		VK_CHECK(vkCreateFence(m_Context->GetDevice(), &fenceInfo, nullptr, &m_FrameInFlight));
 	}
 
 	VkSurfaceFormatKHR RendererBackend::ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats)

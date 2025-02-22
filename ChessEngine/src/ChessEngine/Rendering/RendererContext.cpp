@@ -55,6 +55,11 @@ namespace ChessEngine {
 	{
 	}
 
+	void RendererContext::WaitIdle() const
+	{
+		vkDeviceWaitIdle(m_Device);
+	}
+
 	void RendererContext::CreateInstance()
 	{
 #ifdef DEBUG

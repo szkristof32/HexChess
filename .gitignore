@@ -8,3 +8,5 @@
 # Builds
 bin/
 bin-int/
+
+*.spv

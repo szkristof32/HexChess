@@ -6,6 +6,8 @@
 
 namespace ChessEngine {
 
+	class Pipeline;
+
 	class RendererBackend
 	{
 	public:
@@ -15,13 +17,18 @@ namespace ChessEngine {
 		void BeginFrame();
 		void EndFrame();
 
+		void BindPipeline(std::weak_ptr<Pipeline> pipeline) const;
+		void Draw(uint32_t vertexCount) const;
+
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
 	private:
-		void RecreateSwapchain();
+		void Reload();
+		void CreateSwapchain();
 		void GetImageResources();
 		void CreateSwapchainRenderPass();
 		void CreateFramebuffers();
 		void CreateCommandBuffers();
+		void CreateSyncObjects();
 
 		VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
@@ -46,6 +53,10 @@ namespace ChessEngine {
 
 		VkCommandPool m_CommandPool;
 		VkCommandBuffer m_CommandBuffer;
+
+		VkSemaphore m_ImageAvailable;
+		VkSemaphore m_RenderFinished;
+		VkFence m_FrameInFlight;
 	};
 
 }

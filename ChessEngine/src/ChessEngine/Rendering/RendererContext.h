@@ -31,6 +31,8 @@ namespace ChessEngine {
 		void BeginFrame();
 		void EndFrame();
 
+		void WaitIdle() const;
+
 		VkInstance GetInstance() const { return m_Instance; }
 		VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
 		VkDevice GetDevice() const { return m_Device; }
