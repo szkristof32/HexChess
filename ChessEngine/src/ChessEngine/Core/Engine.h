@@ -20,6 +20,8 @@ namespace ChessEngine {
 
 		void Run();
 	private:
+		void OnResize(uint32_t width, uint32_t height);
+	private:
 		std::unique_ptr<Window> m_Window;
 		std::shared_ptr<Renderer> m_Renderer;
 

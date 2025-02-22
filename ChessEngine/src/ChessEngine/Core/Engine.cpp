@@ -13,6 +13,8 @@ namespace ChessEngine {
 		m_Window = std::make_unique<Window>(1280, 720, "HexChess");
 		m_Renderer = std::make_shared<Renderer>(m_Window->GetWindowHandle());
 
+		m_Window->RegisterSizeListener(std::bind(&Engine::OnResize, this, std::placeholders::_1, std::placeholders::_2));
+
 		if (client)
 		{
 			m_Client = std::unique_ptr<Client, NoDeleteter<Client>>(client);
@@ -37,20 +39,26 @@ namespace ChessEngine {
 		while (m_Running)
 		{
 			m_Window->Update();
+			m_Running = !m_Window->ShouldClose();
 
 			float frameTime = m_Window->GetTime();
 			float delta = frameTime - m_LastFrameTime;
 			m_LastFrameTime = frameTime;
 
-			m_Renderer->BeginFrame();
+			bool success = m_Renderer->BeginFrame();
+			if (!success)
+				continue;
 
 			if (m_Client)
 				m_Client->OnUpdate(delta);
 
 			m_Renderer->EndFrame();
-
-			m_Running = !m_Window->ShouldClose();
 		}
+	}
+
+	void Engine::OnResize(uint32_t width, uint32_t height)
+	{
+		m_Renderer->OnResize(width, height);
 	}
 
 }

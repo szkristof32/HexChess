@@ -16,13 +16,15 @@ namespace ChessEngine {
 		RendererBackend(const std::shared_ptr<RendererContext>& context, GLFWwindow* windowHandle);
 		~RendererBackend();
 
-		void BeginFrame();
-		void EndFrame();
+		bool BeginFrame();
+		bool EndFrame();
 
 		void BindPipeline(std::weak_ptr<Pipeline> pipeline) const;
 		void Draw(uint32_t vertexCount) const;
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
+	public:
+		void OnResize(uint32_t width, uint32_t height);
 	private:
 		void Reload();
 		void CreateSwapchain();
@@ -32,6 +34,8 @@ namespace ChessEngine {
 		void CreateCommandBuffers();
 		void CreateSyncObjects();
 
+		void SetResizedFlag() { m_FramebufferResized = true; }
+
 		VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
 		VkExtent2D ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
@@ -40,6 +44,7 @@ namespace ChessEngine {
 		GLFWwindow* m_WindowHandle;
 
 		VkSwapchainKHR m_Swapchain = nullptr;
+		bool m_FramebufferResized = false;
 
 		VkSurfaceFormatKHR m_SurfaceFormat;
 		VkPresentModeKHR m_PresentMode;

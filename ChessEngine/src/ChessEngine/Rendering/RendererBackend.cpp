@@ -38,12 +38,22 @@ namespace ChessEngine {
 		vkDestroySwapchainKHR(m_Context->GetDevice(), m_Swapchain, nullptr);
 	}
 
-	void RendererBackend::BeginFrame()
+	bool RendererBackend::BeginFrame()
 	{
 		vkWaitForFences(m_Context->GetDevice(), 1, &m_FrameInFlight[m_FrameIndex], true, std::numeric_limits<uint64_t>::max());
-		vkResetFences(m_Context->GetDevice(), 1, &m_FrameInFlight[m_FrameIndex]);
 
-		vkAcquireNextImageKHR(m_Context->GetDevice(), m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable[m_FrameIndex], nullptr, &m_ImageIndex);
+		VkResult result = vkAcquireNextImageKHR(m_Context->GetDevice(), m_Swapchain, std::numeric_limits<uint64_t>::max(), m_ImageAvailable[m_FrameIndex], nullptr, &m_ImageIndex);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			Reload();
+			return false;
+		}
+		if (result != VK_SUBOPTIMAL_KHR)
+		{
+			VK_CHECK(result);
+		}
+
+		vkResetFences(m_Context->GetDevice(), 1, &m_FrameInFlight[m_FrameIndex]);
 
 		VkCommandBufferBeginInfo commandBufferBegin{};
 		commandBufferBegin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -80,9 +90,11 @@ namespace ChessEngine {
 		scissor.extent = m_SwapchainExtent;
 
 		vkCmdSetScissor(m_CommandBuffers[m_FrameIndex], 0, 1, &scissor);
+
+		return true;
 	}
 
-	void RendererBackend::EndFrame()
+	bool RendererBackend::EndFrame()
 	{
 		vkCmdEndRenderPass(m_CommandBuffers[m_FrameIndex]);
 
@@ -110,9 +122,20 @@ namespace ChessEngine {
 		presentInfo.pSwapchains = &m_Swapchain;
 		presentInfo.pImageIndices = &m_ImageIndex;
 
-		VK_CHECK(vkQueuePresentKHR(m_Context->GetGraphicsQueue(), &presentInfo));
+		VkResult result = vkQueuePresentKHR(m_Context->GetGraphicsQueue(), &presentInfo);
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_FramebufferResized)
+		{
+			m_FramebufferResized = false;
+			Reload();
+		}
+		else
+		{
+			VK_CHECK(result);
+		}
 
 		m_FrameIndex = (m_FrameIndex + 1) % RendererBackend::MaxFramesInFlight;
+
+		return true;
 	}
 
 	void RendererBackend::BindPipeline(std::weak_ptr<Pipeline> pipeline) const
@@ -125,9 +148,22 @@ namespace ChessEngine {
 		vkCmdDraw(m_CommandBuffers[m_FrameIndex], vertexCount, 1, 0, 0);
 	}
 
+	void RendererBackend::OnResize(uint32_t width, uint32_t height)
+	{
+		m_FramebufferResized = true;
+	}
+
 	void RendererBackend::Reload()
 	{
 		VkSwapchainKHR oldSwapchain = m_Swapchain;
+
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(m_WindowHandle, &width, &height);
+		while (width == 0 || height == 0)
+		{
+			glfwGetFramebufferSize(m_WindowHandle, &width, &height);
+			glfwWaitEvents();
+		}
 
 		if (!oldSwapchain)
 		{
@@ -141,6 +177,8 @@ namespace ChessEngine {
 			CreateCommandBuffers();
 			CreateSyncObjects();
 		}
+
+		m_Context->WaitIdle();
 
 		for (size_t i = 0; i < m_SwapchainImageCount; i++) {
 			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);

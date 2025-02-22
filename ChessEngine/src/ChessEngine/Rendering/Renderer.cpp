@@ -18,16 +18,20 @@ namespace ChessEngine {
 		m_RendererContext->WaitIdle();
 	}
 
-	void Renderer::BeginFrame()
+	bool Renderer::BeginFrame()
 	{
 		m_RendererContext->BeginFrame();
-		m_RendererBackend->BeginFrame();
+		bool result = m_RendererBackend->BeginFrame();
+
+		return result;
 	}
 
-	void Renderer::EndFrame()
+	bool Renderer::EndFrame()
 	{
-		m_RendererBackend->EndFrame();
+		bool result = m_RendererBackend->EndFrame();
 		m_RendererContext->EndFrame();
+
+		return result;
 	}
 
 	void Renderer::WaitIdle() const
@@ -48,6 +52,11 @@ namespace ChessEngine {
 	void Renderer::Draw(uint32_t vertexCount) const
 	{
 		m_RendererBackend->Draw(vertexCount);
+	}
+
+	void Renderer::OnResize(uint32_t width, uint32_t height)
+	{
+		m_RendererBackend->OnResize(width, height);
 	}
 
 }

@@ -13,10 +13,22 @@ namespace ChessEngine {
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
 		GLFWwindow* window = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
+		glfwSetWindowUserPointer(window, this);
 
 		const GLFWvidmode* vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 		glfwSetWindowPos(window, (vidmode->width - width) / 2, (vidmode->height - height) / 2);
+
+		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* windowPtr, int width, int height)
+		{
+			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
+
+			for (const auto& listener : window.m_SizeListeners)
+			{
+				listener((uint32_t)width, (uint32_t)height);
+			}
+		});
 
 		glfwShowWindow(window);
 		m_WindowHandle = window;
