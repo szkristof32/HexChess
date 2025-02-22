@@ -39,8 +39,10 @@ namespace ChessEngine {
 		std::shared_ptr<RendererContext> m_Context;
 		GLFWwindow* m_WindowHandle;
 
-		VkSwapchainKHR m_Swapchain;
-		VkFormat m_SwapchainFormat;
+		VkSwapchainKHR m_Swapchain = nullptr;
+
+		VkSurfaceFormatKHR m_SurfaceFormat;
+		VkPresentModeKHR m_PresentMode;
 		VkExtent2D m_SwapchainExtent;
 
 		uint32_t m_SwapchainImageCount = 0;

@@ -127,24 +127,36 @@ namespace ChessEngine {
 
 	void RendererBackend::Reload()
 	{
+		VkSwapchainKHR oldSwapchain = m_Swapchain;
+
+		if (!oldSwapchain)
+		{
+			SwapchainFormatInfo swapchainFormat = m_Context->GetSwapchainFormatInfo();
+
+			m_SurfaceFormat = ChooseSurfaceFormat(swapchainFormat.Formats);
+			m_PresentMode = ChoosePresentMode(swapchainFormat.PresentModes);
+			m_SwapchainExtent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
+
+			CreateSwapchainRenderPass();
+			CreateCommandBuffers();
+			CreateSyncObjects();
+		}
+
+		for (size_t i = 0; i < m_SwapchainImageCount; i++) {
+			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
+			vkDestroyImageView(m_Context->GetDevice(), m_SwapchainImageViews[i], nullptr);
+		}
+
 		CreateSwapchain();
 		GetImageResources();
-		CreateSwapchainRenderPass();
 		CreateFramebuffers();
-		CreateCommandBuffers();
-		CreateSyncObjects();
+
+		vkDestroySwapchainKHR(m_Context->GetDevice(), oldSwapchain, nullptr);
 	}
 
 	void RendererBackend::CreateSwapchain()
 	{
 		SwapchainFormatInfo swapchainFormat = m_Context->GetSwapchainFormatInfo();
-
-		VkSurfaceFormatKHR surfaceFormat = ChooseSurfaceFormat(swapchainFormat.Formats);
-		VkPresentModeKHR presentMode = ChoosePresentMode(swapchainFormat.PresentModes);
-		VkExtent2D extent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
-
-		m_SwapchainFormat = surfaceFormat.format;
-		m_SwapchainExtent = extent;
 
 		uint32_t imageCount = swapchainFormat.Capabilities.minImageCount + 1;
 		if (swapchainFormat.Capabilities.maxImageCount > 0 &&
@@ -160,9 +172,9 @@ namespace ChessEngine {
 		swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchainInfo.surface = m_Context->GetSurface();
 		swapchainInfo.minImageCount = imageCount;
-		swapchainInfo.imageFormat = surfaceFormat.format;
-		swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
-		swapchainInfo.imageExtent = extent;
+		swapchainInfo.imageFormat = m_SurfaceFormat.format;
+		swapchainInfo.imageColorSpace = m_SurfaceFormat.colorSpace;
+		swapchainInfo.imageExtent = m_SwapchainExtent;
 		swapchainInfo.imageArrayLayers = 1;
 		swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		swapchainInfo.imageSharingMode = queueFamilyIndices.size() > 1 ? VK_SHARING_MODE_CONCURRENT : VK_SHARING_MODE_EXCLUSIVE;
@@ -170,9 +182,9 @@ namespace ChessEngine {
 		swapchainInfo.pQueueFamilyIndices = indices.data();
 		swapchainInfo.preTransform = swapchainFormat.Capabilities.currentTransform;
 		swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		swapchainInfo.presentMode = presentMode;
+		swapchainInfo.presentMode = m_PresentMode;
 		swapchainInfo.clipped = true;
-		swapchainInfo.oldSwapchain = nullptr;
+		swapchainInfo.oldSwapchain = m_Swapchain;
 
 		VK_CHECK(vkCreateSwapchainKHR(m_Context->GetDevice(), &swapchainInfo, nullptr, &m_Swapchain));
 	}
@@ -190,7 +202,7 @@ namespace ChessEngine {
 			imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			imageViewInfo.image = m_SwapchainImages[i];
 			imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageViewInfo.format = m_SwapchainFormat;
+			imageViewInfo.format = m_SurfaceFormat.format;
 			imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			imageViewInfo.subresourceRange.baseMipLevel = 0;
 			imageViewInfo.subresourceRange.levelCount = 1;
@@ -204,7 +216,7 @@ namespace ChessEngine {
 	void RendererBackend::CreateSwapchainRenderPass()
 	{
 		VkAttachmentDescription colourAttachment{};
-		colourAttachment.format = m_SwapchainFormat;
+		colourAttachment.format = m_SurfaceFormat.format;
 		colourAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
 		colourAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colourAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
