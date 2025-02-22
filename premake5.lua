@@ -90,6 +90,9 @@ project "HexChess"
 	{
 		"%{prj.name}/src/**.cpp",
 		"%{prj.name}/src/**.h",
+
+		"%{prj.name}/Resources/Shaders/**.vert",
+		"%{prj.name}/Resources/Shaders/**.frag",
 	}
 
 	includedirs
@@ -102,3 +105,14 @@ project "HexChess"
 	{
 		"ChessEngine"
 	}
+
+	filter "files:**.vert or files:**.frag"
+		buildcommands
+		{
+			"%{VULKAN_SDK}/Bin/glslc %{file.relpath} -o %{file.abspath}.spv"
+		}
+
+		buildoutputs
+		{
+			"%{file.abspath}.spv"
+		}
