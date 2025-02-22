@@ -13,6 +13,8 @@ namespace ChessEngine {
 		void Update() const;
 
 		bool ShouldClose() const;
+		float GetTime() const;
+
 		GLFWwindow* GetWindowHandle() const { return m_WindowHandle; }
 	private:
 		GLFWwindow* m_WindowHandle;

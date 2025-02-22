@@ -8,6 +8,7 @@ namespace ChessEngine {
 	Window::Window(uint32_t width, uint32_t height, std::string_view title)
 	{
 		int result = glfwInit();
+		glfwSetTime(0.0);
 
 		glfwDefaultWindowHints();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -35,6 +36,11 @@ namespace ChessEngine {
 	bool Window::ShouldClose() const
 	{
 		return glfwWindowShouldClose(m_WindowHandle);
+	}
+
+	float Window::GetTime() const
+	{
+		return (float)glfwGetTime();
 	}
 
 }
