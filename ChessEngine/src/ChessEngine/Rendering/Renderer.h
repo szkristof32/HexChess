@@ -19,7 +19,11 @@ namespace ChessEngine {
 		void BeginFrame();
 		void EndFrame();
 
-		inline std::shared_ptr<Pipeline> CreatePipeline(const PipelineSpecification& spec);
+		void WaitIdle() const;
+
+		std::shared_ptr<Pipeline> CreatePipeline(const PipelineSpecification& spec);
+		void BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const;
+		void Draw(uint32_t vertexCount) const;
 	private:
 		std::shared_ptr<RendererContext> m_RendererContext;
 		std::shared_ptr<RendererBackend> m_RendererBackend;

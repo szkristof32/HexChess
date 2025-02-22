@@ -98,7 +98,9 @@ project "HexChess"
 	includedirs
 	{
 		"%{prj.name}/src",
-		"ChessEngine/src"
+
+		"ChessEngine/src",
+		"%{VULKAN_SDK}/Include"
 	}
 
 	links

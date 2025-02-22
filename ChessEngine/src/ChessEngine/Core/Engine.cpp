@@ -28,6 +28,8 @@ namespace ChessEngine {
 	{
 		if (m_Client)
 			m_Client->OnShutdown();
+
+		m_Renderer->WaitIdle();
 	}
 
 	void Engine::Run()

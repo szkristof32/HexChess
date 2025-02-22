@@ -1,24 +1,13 @@
-#include <iostream>
+#include <pch.h>
 
 #include <ChessEngine/Core/Engine.h>
-#include <ChessEngine/Core/Client.h>
 
-using namespace ChessEngine;
-
-class ChessGame : public Client
-{
-public:
-	virtual void OnUpdate(float deltaInSeconds) override
-	{
-		std::cout << "OnUpdate\n";
-		std::cout << GetRenderer() << "\n";
-	}
-};
+#include "ChessGame.h"
 
 int main(int argc, char** argv)
 {
-	ChessGame game;
+	HexChess::ChessGame game;
 
-	Engine engine(&game);
+	ChessEngine::Engine engine(&game);
 	engine.Run();
 }
