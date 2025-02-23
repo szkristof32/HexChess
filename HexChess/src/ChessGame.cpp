@@ -3,23 +3,16 @@
 
 namespace HexChess {
 
-	using ChessEngine::ShaderStage;
-
 	void ChessGame::OnInit()
 	{
 		m_Renderer = GetRenderer();
 
-		ChessEngine::PipelineSpecification boardPipelineSpec{};
-		boardPipelineSpec.ShaderBinaries[ShaderStage::Vertex] = "Resources/Shaders/BoardShader.vert.spv";
-		boardPipelineSpec.ShaderBinaries[ShaderStage::Fragment] = "Resources/Shaders/BoardShader.frag.spv";
-
-		m_BoardPipeline = m_Renderer->CreatePipeline(boardPipelineSpec);
+		m_Board = std::make_unique<Board>(m_Renderer);
 	}
 
 	void ChessGame::OnUpdate(float deltaInSeconds)
 	{
-		m_Renderer->BindPipeline(m_BoardPipeline);
-		m_Renderer->Draw(3);
+		m_Board->OnUpdate();
 	}
 
 }

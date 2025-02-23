@@ -8,7 +8,7 @@ project "GLFW"
 	staticruntime "off"
 	warnings "off"
 
-	targetdir ("/bin/%{prj.name}")
+	targetdir ("bin/%{prj.name}")
 	objdir ("bin-int/%{prj.name}")
 
 	files
@@ -102,12 +102,26 @@ project "GLFW"
 			"_CRT_SECURE_NO_WARNINGS"
 		}
 
-	filter "configurations:Debug"
-		runtime "Debug"
-		symbols "on"
+project "glm"
+	location "ChessEngine/vendor/glm"
 
-	filter "configurations:Release"
-		runtime "Release"
-		optimize "full"
-
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++20"
+	
+	targetdir ("bin/%{prj.name}")
+	objdir ("bin-int/%{prj.name}")
+	
+	files
+	{
+		"ChessEngine/vendor/glm/glm/**.cpp",
+		"ChessEngine/vendor/glm/glm/**.hpp",
+		"ChessEngine/vendor/glm/glm/**.inl"
+	}
+	
+	includedirs
+	{
+		"ChessEngine/vendor/glm"
+	}
+	
 group ""

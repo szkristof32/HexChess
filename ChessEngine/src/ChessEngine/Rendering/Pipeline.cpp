@@ -18,6 +18,46 @@ namespace ChessEngine {
 			return (VkShaderStageFlagBits)0;
 		}
 
+		static VkFormat VertexDataTypeToVkFormat(VertexDataType dataType)
+		{
+			switch (dataType)
+			{
+				case VertexDataType::Float:		return VK_FORMAT_R32_SFLOAT;
+				case VertexDataType::Float2:	return VK_FORMAT_R32G32_SFLOAT;
+				case VertexDataType::Float3:	return VK_FORMAT_R32G32B32_SFLOAT;
+				case VertexDataType::Float4:	return VK_FORMAT_R32G32B32A32_SFLOAT;
+				case VertexDataType::Int:		return VK_FORMAT_R32_SINT;
+				case VertexDataType::Int2:		return VK_FORMAT_R32G32_SINT;
+				case VertexDataType::Int3:		return VK_FORMAT_R32G32B32_SINT;
+				case VertexDataType::Int4:		return VK_FORMAT_R32G32B32A32_SINT;
+				case VertexDataType::Mat3:		return VK_FORMAT_R32G32B32_SFLOAT;
+				case VertexDataType::Mat4:		return VK_FORMAT_R32G32B32A32_SFLOAT;
+				case VertexDataType::Bool:		return VK_FORMAT_R8_SINT;
+			}
+
+			return VK_FORMAT_UNDEFINED;
+		}
+
+		static uint32_t VertexDataTypeSize(VertexDataType dataType)
+		{
+			switch (dataType)
+			{
+				case VertexDataType::Float:		return 1 * 4;
+				case VertexDataType::Float2:	return 2 * 4;
+				case VertexDataType::Float3:	return 3 * 4;
+				case VertexDataType::Float4:	return 4 * 4;
+				case VertexDataType::Int:		return 1 * 4;
+				case VertexDataType::Int2:		return 2 * 4;
+				case VertexDataType::Int3:		return 3 * 4;
+				case VertexDataType::Int4:		return 4 * 4;
+				case VertexDataType::Mat3:		return 3 * 4;
+				case VertexDataType::Mat4:		return 4 * 4;
+				case VertexDataType::Bool:		return 1;
+			}
+
+			return 0;
+		}
+
 	}
 
 	Pipeline::Pipeline(const PipelineSpecification& spec, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
@@ -49,12 +89,36 @@ namespace ChessEngine {
 			shaderStage.pName = "main";
 		}
 
+		std::vector<VkVertexInputAttributeDescription> vertexAttributes;
+		vertexAttributes.reserve(m_Spec.VertexInput.size());
+		std::vector<VkVertexInputBindingDescription> vertexBindings;
+		vertexBindings.reserve(1);
+
+		uint32_t index = 0, offset = 0;
+		for (const auto& attribute : m_Spec.VertexInput)
+		{
+			VkVertexInputAttributeDescription& vertexAttribute = vertexAttributes.emplace_back();
+			vertexAttribute.binding = 0;
+			vertexAttribute.location = index++;
+			vertexAttribute.format = PipelineUtils::VertexDataTypeToVkFormat(attribute);
+			vertexAttribute.offset = offset;
+
+			offset += PipelineUtils::VertexDataTypeSize(attribute);
+		}
+
+		{
+			VkVertexInputBindingDescription& vertexBinding = vertexBindings.emplace_back();
+			vertexBinding.binding = 0;
+			vertexBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+			vertexBinding.stride = offset;
+		}
+
 		VkPipelineVertexInputStateCreateInfo vertexInput{};
 		vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInput.vertexAttributeDescriptionCount = 0;
-		vertexInput.pVertexAttributeDescriptions = nullptr;
-		vertexInput.vertexBindingDescriptionCount = 0;
-		vertexInput.pVertexBindingDescriptions = nullptr;
+		vertexInput.vertexAttributeDescriptionCount = (uint32_t)vertexAttributes.size();
+		vertexInput.pVertexAttributeDescriptions = vertexAttributes.data();
+		vertexInput.vertexBindingDescriptionCount = (uint32_t)vertexBindings.size();
+		vertexInput.pVertexBindingDescriptions = vertexBindings.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

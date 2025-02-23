@@ -60,12 +60,14 @@ project "ChessEngine"
 		"%{prj.name}/src",
 
 		"ChessEngine/vendor/GLFW/include",
+		"ChessEngine/vendor/glm",
 		"%{VULKAN_SDK}/Include"
 	}
 
 	links
 	{
-		"GLFW"
+		"GLFW",
+		"glm"
 	}
 
 	libdirs
@@ -100,6 +102,7 @@ project "HexChess"
 		"%{prj.name}/src",
 
 		"ChessEngine/src",
+		"ChessEngine/vendor/glm",
 		"%{VULKAN_SDK}/Include"
 	}
 

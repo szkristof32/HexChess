@@ -13,9 +13,19 @@ namespace ChessEngine {
 		Vertex, Fragment
 	};
 
+	enum class VertexDataType
+	{
+		None = 0,
+		Float, Float2, Float3, Float4,
+		Int, Int2, Int3, Int4,
+		Mat3, Mat4,
+		Bool
+	};
+
 	struct PipelineSpecification
 	{
 		std::unordered_map<ShaderStage, std::string_view> ShaderBinaries;
+		std::vector<VertexDataType> VertexInput;
 	};
 	
 	class Pipeline

@@ -2,7 +2,7 @@
 
 #include <ChessEngine/Core/Client.h>
 
-#include <ChessEngine/Rendering/Pipeline.h>
+#include "Board.h"
 
 namespace HexChess {
 
@@ -14,7 +14,8 @@ namespace HexChess {
 		virtual void OnUpdate(float deltaInSeconds) override;
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
-		std::shared_ptr<ChessEngine::Pipeline> m_BoardPipeline;
+
+		std::unique_ptr<Board> m_Board;
 	};
 
 }

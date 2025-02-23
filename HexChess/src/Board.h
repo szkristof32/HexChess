@@ -1,0 +1,28 @@
+#pragma once
+
+#include <ChessEngine/Rendering/Renderer.h>
+#include <ChessEngine/Rendering/Pipeline.h>
+
+#include <glm/glm.hpp>
+
+namespace HexChess {
+
+	struct BoardVertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Colour;
+	};
+
+	class Board
+	{
+	public:
+		Board(const std::shared_ptr<ChessEngine::Renderer>& renderer);
+		~Board();
+
+		void OnUpdate();
+	private:
+		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
+		std::shared_ptr<ChessEngine::Pipeline> m_BoardPipeline;
+	};
+
+}
