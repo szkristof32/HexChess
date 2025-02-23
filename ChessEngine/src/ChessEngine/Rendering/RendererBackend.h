@@ -8,6 +8,7 @@ namespace ChessEngine {
 
 	class Pipeline;
 	class VertexBuffer;
+	class IndexBuffer;
 
 	class RendererBackend
 	{
@@ -22,7 +23,10 @@ namespace ChessEngine {
 
 		void BindPipeline(std::weak_ptr<Pipeline> pipeline) const;
 		void BindVertexBuffer(std::weak_ptr<VertexBuffer> vertexBuffer) const;
+		void BindIndexBuffer(std::weak_ptr<IndexBuffer> indexBuffer) const;
+
 		void Draw(uint32_t vertexCount) const;
+		void DrawIndexed(uint32_t indexCount) const;
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
 		VkCommandBuffer AllocateNewCommandBuffer();

@@ -152,9 +152,19 @@ namespace ChessEngine {
 		vkCmdBindVertexBuffers(m_CommandBuffers[m_FrameIndex], 0, 1, &buffer, &offset);
 	}
 
+	void RendererBackend::BindIndexBuffer(std::weak_ptr<IndexBuffer> indexBuffer) const
+	{
+		vkCmdBindIndexBuffer(m_CommandBuffers[m_FrameIndex], indexBuffer.lock()->GetBuffer(), 0, VK_INDEX_TYPE_UINT32);
+	}
+
 	void RendererBackend::Draw(uint32_t vertexCount) const
 	{
 		vkCmdDraw(m_CommandBuffers[m_FrameIndex], vertexCount, 1, 0, 0);
+	}
+
+	void RendererBackend::DrawIndexed(uint32_t indexCount) const
+	{
+		vkCmdDrawIndexed(m_CommandBuffers[m_FrameIndex], indexCount, 1, 0, 0, 0);
 	}
 
 	VkCommandBuffer RendererBackend::AllocateNewCommandBuffer()

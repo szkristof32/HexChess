@@ -50,6 +50,11 @@ namespace ChessEngine {
 		return std::make_shared<VertexBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
 	}
 
+	std::shared_ptr<IndexBuffer> Renderer::CreateIndexBuffer(size_t indexCount, const uint32_t* data)
+	{
+		return std::make_shared<IndexBuffer>(indexCount, data, m_RendererContext, m_RendererBackend);
+	}
+
 	void Renderer::BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const
 	{
 		m_RendererBackend->BindPipeline(pipeline);
@@ -60,9 +65,19 @@ namespace ChessEngine {
 		m_RendererBackend->BindVertexBuffer(vertexBuffer);
 	}
 
+	void Renderer::BindIndexBuffer(const std::shared_ptr<IndexBuffer>& indexBuffer) const
+	{
+		m_RendererBackend->BindIndexBuffer(indexBuffer);
+	}
+
 	void Renderer::Draw(uint32_t vertexCount) const
 	{
 		m_RendererBackend->Draw(vertexCount);
+	}
+
+	void Renderer::DrawIndexed(uint32_t indexCount) const
+	{
+		m_RendererBackend->DrawIndexed(indexCount);
 	}
 
 	void Renderer::OnResize(uint32_t width, uint32_t height)

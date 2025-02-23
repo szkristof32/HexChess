@@ -24,7 +24,9 @@ namespace HexChess {
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 		std::shared_ptr<ChessEngine::Pipeline> m_BoardPipeline;
+
 		std::shared_ptr<ChessEngine::VertexBuffer> m_BoardVertexBuffer;
+		std::shared_ptr<ChessEngine::IndexBuffer> m_BoardIndexBuffer;
 	};
 
 }

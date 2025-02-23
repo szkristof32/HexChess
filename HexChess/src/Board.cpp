@@ -20,11 +20,17 @@ namespace HexChess {
 		m_BoardPipeline = m_Renderer->CreatePipeline(boardPipelineSpec);
 
 		const std::vector<BoardVertex> vertices = {
-			{ { 0.0f, 0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-			{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+			{ { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+			{ { 0.5f, 0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+			{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
+			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f } }
 		};
 		m_BoardVertexBuffer = m_Renderer->CreateVertexBuffer(vertices.size() * sizeof(BoardVertex), vertices.data());
+
+		const std::vector<uint32_t> indices = {
+			0, 1, 2, 2, 1, 3
+		};
+		m_BoardIndexBuffer = m_Renderer->CreateIndexBuffer(indices.size(), indices.data());
 	}
 
 	Board::~Board()
@@ -35,8 +41,9 @@ namespace HexChess {
 	{
 		m_Renderer->BindPipeline(m_BoardPipeline);
 		m_Renderer->BindVertexBuffer(m_BoardVertexBuffer);
+		m_Renderer->BindIndexBuffer(m_BoardIndexBuffer);
 
-		m_Renderer->Draw(3);
+		m_Renderer->DrawIndexed(6);
 	}
 
 }
