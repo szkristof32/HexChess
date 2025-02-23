@@ -2,6 +2,7 @@
 
 #include <ChessEngine/Rendering/Renderer.h>
 #include <ChessEngine/Rendering/Pipeline.h>
+#include <ChessEngine/Rendering/Buffers.h>
 
 #include <glm/glm.hpp>
 
@@ -23,6 +24,7 @@ namespace HexChess {
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 		std::shared_ptr<ChessEngine::Pipeline> m_BoardPipeline;
+		std::shared_ptr<ChessEngine::VertexBuffer> m_BoardVertexBuffer;
 	};
 
 }

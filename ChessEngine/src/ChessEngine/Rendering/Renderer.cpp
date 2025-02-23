@@ -4,6 +4,7 @@
 #include "ChessEngine/Rendering/RendererContext.h"
 #include "ChessEngine/Rendering/RendererBackend.h"
 #include "ChessEngine/Rendering/Pipeline.h"
+#include "ChessEngine/Rendering/Buffers.h"
 
 namespace ChessEngine {
 
@@ -44,9 +45,19 @@ namespace ChessEngine {
 		return std::make_shared<Pipeline>(spec, m_RendererContext, m_RendererBackend);
 	}
 
+	std::shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(size_t dataSize, const void* data)
+	{
+		return std::make_shared<VertexBuffer>(dataSize, data, m_RendererContext);
+	}
+
 	void Renderer::BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const
 	{
 		m_RendererBackend->BindPipeline(pipeline);
+	}
+
+	void Renderer::BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) const
+	{
+		m_RendererBackend->BindVertexBuffer(vertexBuffer);
 	}
 
 	void Renderer::Draw(uint32_t vertexCount) const

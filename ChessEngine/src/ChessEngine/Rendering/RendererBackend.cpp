@@ -2,6 +2,7 @@
 #include "RendererBackend.h"
 
 #include "ChessEngine/Rendering/Pipeline.h"
+#include "ChessEngine/Rendering/Buffers.h"
 
 #include "VulkanUtils.h"
 
@@ -141,6 +142,14 @@ namespace ChessEngine {
 	void RendererBackend::BindPipeline(std::weak_ptr<Pipeline> pipeline) const
 	{
 		vkCmdBindPipeline(m_CommandBuffers[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.lock()->GetPipeline());
+	}
+
+	void RendererBackend::BindVertexBuffer(std::weak_ptr<VertexBuffer> vertexBuffer) const
+	{
+		VkBuffer buffer = vertexBuffer.lock()->GetBuffer();
+		VkDeviceSize offset = 0;
+
+		vkCmdBindVertexBuffers(m_CommandBuffers[m_FrameIndex], 0, 1, &buffer, &offset);
 	}
 
 	void RendererBackend::Draw(uint32_t vertexCount) const

@@ -41,6 +41,8 @@ namespace ChessEngine {
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
 		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamily; }
 		const SwapchainFormatInfo& GetSwapchainFormatInfo() const { return m_SwapchainFormat; }
+
+		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	private:
 		void CreateInstance();
 		void PickPhysicalDevice();

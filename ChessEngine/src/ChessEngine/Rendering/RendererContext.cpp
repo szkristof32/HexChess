@@ -60,6 +60,23 @@ namespace ChessEngine {
 		vkDeviceWaitIdle(m_Device);
 	}
 
+	uint32_t RendererContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+	{
+		VkPhysicalDeviceMemoryProperties memoryProperties;
+		vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memoryProperties);
+
+		for (uint32_t i = 0;i < memoryProperties.memoryTypeCount;i++)
+		{
+			if ((typeFilter & (1 << i)) &&
+				(memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+			{
+				return i;
+			}
+		}
+
+		return -1;
+	}
+
 	void RendererContext::CreateInstance()
 	{
 #ifdef DEBUG
