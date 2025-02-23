@@ -25,6 +25,8 @@ namespace ChessEngine {
 		void Draw(uint32_t vertexCount) const;
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
+		VkCommandBuffer AllocateNewCommandBuffer();
+		void SubmitCommandBuffer(VkCommandBuffer commandBuffer);
 	public:
 		void OnResize(uint32_t width, uint32_t height);
 	private:

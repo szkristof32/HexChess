@@ -47,7 +47,7 @@ namespace ChessEngine {
 
 	std::shared_ptr<VertexBuffer> Renderer::CreateVertexBuffer(size_t dataSize, const void* data)
 	{
-		return std::make_shared<VertexBuffer>(dataSize, data, m_RendererContext);
+		return std::make_shared<VertexBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
 	}
 
 	void Renderer::BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const

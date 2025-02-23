@@ -157,6 +157,41 @@ namespace ChessEngine {
 		vkCmdDraw(m_CommandBuffers[m_FrameIndex], vertexCount, 1, 0, 0);
 	}
 
+	VkCommandBuffer RendererBackend::AllocateNewCommandBuffer()
+	{
+		VkCommandBufferAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		allocInfo.commandPool = m_CommandPool;
+		allocInfo.commandBufferCount = 1;
+		
+		VkCommandBuffer commandBuffer;
+		VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &commandBuffer));
+
+		VkCommandBufferBeginInfo beginInfo{};
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+		VK_CHECK(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+
+		return commandBuffer;
+	}
+
+	void RendererBackend::SubmitCommandBuffer(VkCommandBuffer commandBuffer)
+	{
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+
+		VK_CHECK(vkEndCommandBuffer(commandBuffer));
+
+		VK_CHECK(vkQueueSubmit(m_Context->GetGraphicsQueue(), 1, &submitInfo, nullptr));
+		VK_CHECK(vkQueueWaitIdle(m_Context->GetGraphicsQueue()));
+
+		vkFreeCommandBuffers(m_Context->GetDevice(), m_CommandPool, 1, &commandBuffer);
+	}
+
 	void RendererBackend::OnResize(uint32_t width, uint32_t height)
 	{
 		m_FramebufferResized = true;

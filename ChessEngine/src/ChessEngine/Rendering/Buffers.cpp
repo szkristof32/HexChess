@@ -2,6 +2,7 @@
 #include "Buffers.h"
 
 #include "ChessEngine/Rendering/RendererContext.h"
+#include "ChessEngine/Rendering/RendererBackend.h"
 
 #include "VulkanUtils.h"
 
@@ -36,18 +37,41 @@ namespace ChessEngine {
 			VK_CHECK(vkBindBufferMemory(ctx->GetDevice(), buffer, *outMemory, 0));
 		}
 
+		static void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer commandBuffer)
+		{
+			VkBufferCopy bufferCopy{};
+			bufferCopy.srcOffset = 0;
+			bufferCopy.dstOffset = 0;
+			bufferCopy.size = size;
+
+			vkCmdCopyBuffer(commandBuffer, source, destination, 1, &bufferCopy);
+		}
+
 	}
 
-	VertexBuffer::VertexBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context)
-		: m_Context(context)
+	VertexBuffer::VertexBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
+		: m_Context(context), m_Backend(backend)
 	{
-		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_Context->GetDevice(), &m_Buffer);
-		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &m_Memory);
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_Context->GetDevice(), &stagingBuffer);
+		BufferUtils::AllocateMemory(stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &stagingBufferMemory);
+
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
+		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
 
 		void* mapped;
-		vkMapMemory(m_Context->GetDevice(), m_Memory, 0, dataSize, 0, &mapped);
+		vkMapMemory(m_Context->GetDevice(), stagingBufferMemory, 0, dataSize, 0, &mapped);
 		memcpy(mapped, data, dataSize);
-		vkUnmapMemory(m_Context->GetDevice(), m_Memory);
+		vkUnmapMemory(m_Context->GetDevice(), stagingBufferMemory);
+
+		VkCommandBuffer commandBuffer = m_Backend->AllocateNewCommandBuffer();
+		BufferUtils::CopyBuffer(stagingBuffer, m_Buffer, dataSize, commandBuffer);
+		m_Backend->SubmitCommandBuffer(commandBuffer);
+
+		vkFreeMemory(m_Context->GetDevice(), stagingBufferMemory, nullptr);
+		vkDestroyBuffer(m_Context->GetDevice(), stagingBuffer, nullptr);
 	}
 
 	VertexBuffer::~VertexBuffer()
