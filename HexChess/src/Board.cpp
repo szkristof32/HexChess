@@ -21,14 +21,6 @@ namespace HexChess {
 			VertexDataType::Float3
 		};
 
-		ChessEngine::DescriptorSet& boardUniforms = boardPipelineSpec.DescriptorSets.emplace_back();
-		ChessEngine::ShaderResource& uniforms = boardUniforms.Resources.emplace_back();
-		uniforms.Name = "Uniforms";
-		uniforms.Binding = 0;
-		uniforms.DescriptorCount = 1;
-		uniforms.Type = ShaderResourceType::Uniform;
-		uniforms.Stage = ShaderStage::Vertex;
-
 		m_BoardPipeline = m_Renderer->CreatePipeline(boardPipelineSpec);
 
 		const std::vector<BoardVertex> vertices = {

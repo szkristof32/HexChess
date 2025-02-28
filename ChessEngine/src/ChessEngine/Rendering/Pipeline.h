@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ChessEngine/Rendering/Descriptors.h"
+#include "ChessEngine/Rendering/ShaderReflection.h"
 
 #include "ChessEngine/Rendering/Buffers.h"
 #include "ChessEngine/Rendering/RendererContext.h"
@@ -23,7 +23,6 @@ namespace ChessEngine {
 	{
 		std::unordered_map<ShaderStage, std::string_view> ShaderBinaries;
 		std::vector<VertexDataType> VertexInput;
-		std::vector<DescriptorSet> DescriptorSets;
 	};
 	
 	class Pipeline
@@ -51,6 +50,8 @@ namespace ChessEngine {
 
 		VkPipeline m_Pipeline;
 		VkPipelineLayout m_PipelineLayout;
+
+		std::unordered_map<uint32_t, DescriptorSet> m_ReflectionData;
 
 		VkDescriptorPool m_DescriptorPool;
 		uint32_t m_DescriptorCount = 0;

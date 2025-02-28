@@ -7,15 +7,24 @@ namespace ChessEngine {
 
 	namespace PipelineUtils {
 
+		static ShaderStage VkStageToShaderStage(VkShaderStageFlagBits vkStage)
+		{
+			ShaderStage stage = ShaderStage::None;
+
+			if (vkStage & VK_SHADER_STAGE_VERTEX_BIT)	stage |= ShaderStage::Vertex;
+			if (vkStage & VK_SHADER_STAGE_FRAGMENT_BIT)	stage |= ShaderStage::Fragment;
+
+			return stage;
+		}
+
 		static VkShaderStageFlagBits ShaderStageToVkStage(ShaderStage stage)
 		{
-			switch (stage)
-			{
-				case ShaderStage::Vertex:	return VK_SHADER_STAGE_VERTEX_BIT;
-				case ShaderStage::Fragment:	return VK_SHADER_STAGE_FRAGMENT_BIT;
-			}
+			VkShaderStageFlagBits vkStage = (VkShaderStageFlagBits)0;
 
-			return (VkShaderStageFlagBits)0;
+			if (stage & ShaderStage::Vertex)	vkStage |= VK_SHADER_STAGE_VERTEX_BIT;
+			if (stage & ShaderStage::Fragment)	vkStage |= VK_SHADER_STAGE_FRAGMENT_BIT;
+
+			return vkStage;
 		}
 
 		static VkFormat VertexDataTypeToVkFormat(VertexDataType dataType)
@@ -99,13 +108,14 @@ namespace ChessEngine {
 		uint32_t descriptorSetIndex = 0;
 		bool foundResource = false;
 
-		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		for (const auto& [index, descriptorSet] : m_ReflectionData)
 		{
 			for (const auto& resource : descriptorSet.Resources)
 			{
 				if (resource.Name == name && resource.Type == ShaderResourceType::Uniform)
 				{
 					shaderResource = resource;
+					descriptorSetIndex = index;
 					foundResource = true;
 					break;
 				}
@@ -113,7 +123,6 @@ namespace ChessEngine {
 
 			if (foundResource)
 				break;
-			descriptorSetIndex++;
 		}
 
 		VkWriteDescriptorSet descriptorWrite{};
@@ -267,9 +276,9 @@ namespace ChessEngine {
 
 	void Pipeline::CreateDescriptorSetLayout()
 	{
-		m_DescriptorSetLayouts.reserve(m_Spec.DescriptorSets.size());
+		m_DescriptorSetLayouts.reserve(m_ReflectionData.size());
 
-		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		for (const auto& [index, descriptorSet] : m_ReflectionData)
 		{
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			bindings.reserve(descriptorSet.Resources.size());
@@ -300,7 +309,7 @@ namespace ChessEngine {
 		std::vector<VkDescriptorPoolSize> poolSizes;
 		poolSizes.reserve(m_DescriptorCount);
 
-		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		for (const auto& [index, descriptorSet] : m_ReflectionData)
 		{
 			for (const auto& resource : descriptorSet.Resources)
 			{
@@ -337,10 +346,12 @@ namespace ChessEngine {
 		std::ifstream file(path.data(), std::ios::ate | std::ios::binary); // RAII
 
 		size_t fileSize = file.tellg();
-		std::vector<char> buffer(fileSize);
+		std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
 
 		file.seekg(0, std::ios::beg);
-		file.read(buffer.data(), fileSize);
+		file.read((char*)buffer.data(), fileSize);
+
+		ReflectShaderStage(buffer, PipelineUtils::VkStageToShaderStage(stage), m_ReflectionData);
 
 		VkShaderModuleCreateInfo moduleInfo{};
 		moduleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

@@ -5,7 +5,7 @@ layout (location = 1) in vec3 in_colour;
 
 layout (location = 0) out vec3 pass_colour;
 
-uniform Uniforms
+layout (set = 0) uniform Uniforms
 {
 	mat4 ProjectionMatrix;
 	mat4 ViewMatrix;

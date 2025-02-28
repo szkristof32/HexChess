@@ -81,6 +81,12 @@ project "ChessEngine"
 	filter "system:linux"
 		links "vulkan"
 
+	filter "configurations:Debug"
+		links "spirv-cross-cored"
+
+	filter "configurations:Release"
+		links "spirv-cross-core"
+
 project "HexChess"
 	location "%{prj.name}"
 	kind "ConsoleApp"

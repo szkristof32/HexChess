@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ChessEngine/Utils/EnumUtils.h"
+
 namespace ChessEngine {
 
 	enum class ShaderResourceType
@@ -16,9 +18,12 @@ namespace ChessEngine {
 
 	struct ShaderResource
 	{
-		std::string_view Name;
+		std::string Name;
+
 		uint32_t Binding;
 		uint32_t DescriptorCount;
+		uint32_t Size;
+
 		ShaderResourceType Type;
 		ShaderStage Stage;
 	};
@@ -27,5 +32,7 @@ namespace ChessEngine {
 	{
 		std::vector<ShaderResource> Resources;
 	};
+
+	void ReflectShaderStage(const std::vector<uint32_t>& code, ShaderStage stage, std::unordered_map<uint32_t, DescriptorSet>& reflectionData);
 
 }
