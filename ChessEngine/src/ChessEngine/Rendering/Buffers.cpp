@@ -111,4 +111,27 @@ namespace ChessEngine {
 		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
 	}
 
+	UniformBuffer::UniformBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
+		: m_Context(context), m_Backend(backend)
+	{
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
+		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &m_Memory);
+
+		SetData(dataSize, data);
+	}
+
+	UniformBuffer::~UniformBuffer()
+	{
+		vkFreeMemory(m_Context->GetDevice(), m_Memory, nullptr);
+		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
+	}
+
+	void UniformBuffer::SetData(size_t dataSize, const void* data)
+	{
+		void* mapped;
+		vkMapMemory(m_Context->GetDevice(), m_Memory, 0, dataSize, 0, &mapped);
+		memcpy(mapped, data, dataSize);
+		vkUnmapMemory(m_Context->GetDevice(), m_Memory);
+	}
+
 }

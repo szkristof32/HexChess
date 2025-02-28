@@ -17,6 +17,7 @@ namespace ChessEngine {
 		virtual void OnShutdown() {}
 
 		virtual void OnUpdate(float deltaInSeconds) {}
+		virtual void OnResize(uint32_t width, uint32_t height) {}
 	public:
 		GetRendererFn GetRenderer;
 	};

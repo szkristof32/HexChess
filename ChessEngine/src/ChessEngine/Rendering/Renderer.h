@@ -9,8 +9,10 @@ namespace ChessEngine {
 
 	struct PipelineSpecification;
 	class Pipeline;
+
 	class VertexBuffer;
 	class IndexBuffer;
+	class UniformBuffer;
 
 	class Renderer
 	{
@@ -24,8 +26,10 @@ namespace ChessEngine {
 		void WaitIdle() const;
 
 		std::shared_ptr<Pipeline> CreatePipeline(const PipelineSpecification& spec);
+
 		std::shared_ptr<VertexBuffer> CreateVertexBuffer(size_t dataSize, const void* data);
 		std::shared_ptr<IndexBuffer> CreateIndexBuffer(size_t indexCount, const uint32_t* data);
+		std::shared_ptr<UniformBuffer> CreateUniformBuffer(size_t dataSize, const void* data);
 
 		void BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const;
 		void BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) const;

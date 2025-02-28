@@ -114,7 +114,7 @@ project "HexChess"
 	filter "files:**.vert or files:**.frag"
 		buildcommands
 		{
-			"%{VULKAN_SDK}/Bin/glslc %{file.relpath} -o %{file.abspath}.spv"
+			"%{VULKAN_SDK}/Bin/glslc -fauto-bind-uniforms %{file.relpath} -o %{file.abspath}.spv"
 		}
 
 		buildoutputs

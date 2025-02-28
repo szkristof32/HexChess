@@ -15,4 +15,9 @@ namespace HexChess {
 		m_Board->OnUpdate();
 	}
 
+	void ChessGame::OnResize(uint32_t width, uint32_t height)
+	{
+		m_Board->OnResize(width, height);
+	}
+
 }

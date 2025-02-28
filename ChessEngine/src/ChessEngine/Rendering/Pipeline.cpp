@@ -58,6 +58,16 @@ namespace ChessEngine {
 			return 0;
 		}
 
+		static VkDescriptorType GetDescriptorType(ShaderResourceType type)
+		{
+			switch (type)
+			{
+				case ShaderResourceType::Uniform:	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			}
+
+			return (VkDescriptorType)-1;
+		}
+
 	}
 
 	Pipeline::Pipeline(const PipelineSpecification& spec, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
@@ -68,8 +78,54 @@ namespace ChessEngine {
 
 	Pipeline::~Pipeline()
 	{
+		vkDestroyDescriptorPool(m_Context->GetDevice(), m_DescriptorPool, nullptr);
+		for (const auto& descriptorSetLayout : m_DescriptorSetLayouts)
+		{
+			vkDestroyDescriptorSetLayout(m_Context->GetDevice(), descriptorSetLayout, nullptr);
+		}
+
 		vkDestroyPipelineLayout(m_Context->GetDevice(), m_PipelineLayout, nullptr);
 		vkDestroyPipeline(m_Context->GetDevice(), m_Pipeline, nullptr);
+	}
+
+	void Pipeline::WriteDescriptor(std::string_view name, std::weak_ptr<UniformBuffer> uniformBuffer)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = uniformBuffer.lock()->GetBuffer();
+		bufferInfo.offset = 0;
+		bufferInfo.range = VK_WHOLE_SIZE;
+
+		ShaderResource shaderResource;
+		uint32_t descriptorSetIndex = 0;
+		bool foundResource = false;
+
+		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		{
+			for (const auto& resource : descriptorSet.Resources)
+			{
+				if (resource.Name == name && resource.Type == ShaderResourceType::Uniform)
+				{
+					shaderResource = resource;
+					foundResource = true;
+					break;
+				}
+			}
+
+			if (foundResource)
+				break;
+			descriptorSetIndex++;
+		}
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSets[descriptorSetIndex];
+		descriptorWrite.dstBinding = shaderResource.Binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = shaderResource.DescriptorCount;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 
 	void Pipeline::Create()
@@ -143,7 +199,7 @@ namespace ChessEngine {
 		rasteriser.polygonMode = VK_POLYGON_MODE_FILL;
 		rasteriser.lineWidth = 1.0f;
 		rasteriser.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasteriser.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasteriser.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasteriser.depthBiasEnable = false;
 		rasteriser.depthClampEnable = false;
 		rasteriser.rasterizerDiscardEnable = false;
@@ -173,12 +229,16 @@ namespace ChessEngine {
 		colourBlending.pAttachments = &colourBlendAttachment;
 		colourBlending.logicOpEnable = false;
 
+		CreateDescriptorSetLayout();
+		CreateDescriptorPool();
+		CreateDescriptorSets();
+
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		layoutInfo.pushConstantRangeCount = 0;
 		layoutInfo.pPushConstantRanges = nullptr;
-		layoutInfo.setLayoutCount = 0;
-		layoutInfo.pSetLayouts = nullptr;
+		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorSetLayouts.size();
+		layoutInfo.pSetLayouts = m_DescriptorSetLayouts.data();
 
 		VK_CHECK(vkCreatePipelineLayout(m_Context->GetDevice(), &layoutInfo, nullptr, &m_PipelineLayout));
 
@@ -203,6 +263,73 @@ namespace ChessEngine {
 		{
 			vkDestroyShaderModule(m_Context->GetDevice(), shaderStage.module, nullptr);
 		}
+	}
+
+	void Pipeline::CreateDescriptorSetLayout()
+	{
+		m_DescriptorSetLayouts.reserve(m_Spec.DescriptorSets.size());
+
+		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		{
+			std::vector<VkDescriptorSetLayoutBinding> bindings;
+			bindings.reserve(descriptorSet.Resources.size());
+
+			for (const auto& resource : descriptorSet.Resources)
+			{
+				VkDescriptorSetLayoutBinding& binding = bindings.emplace_back();
+				binding.binding = resource.Binding;
+				binding.descriptorType = PipelineUtils::GetDescriptorType(resource.Type);
+				binding.descriptorCount = resource.DescriptorCount;
+				binding.stageFlags = PipelineUtils::ShaderStageToVkStage(resource.Stage);
+
+				m_DescriptorCount++;
+			}
+
+			VkDescriptorSetLayoutCreateInfo setLayoutInfo{};
+			setLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			setLayoutInfo.bindingCount = (uint32_t)bindings.size();
+			setLayoutInfo.pBindings = bindings.data();
+
+			VkDescriptorSetLayout& layout = m_DescriptorSetLayouts.emplace_back();
+			VK_CHECK(vkCreateDescriptorSetLayout(m_Context->GetDevice(), &setLayoutInfo, nullptr, &layout));
+		}
+	}
+
+	void Pipeline::CreateDescriptorPool()
+	{
+		std::vector<VkDescriptorPoolSize> poolSizes;
+		poolSizes.reserve(m_DescriptorCount);
+
+		for (const auto& descriptorSet : m_Spec.DescriptorSets)
+		{
+			for (const auto& resource : descriptorSet.Resources)
+			{
+				VkDescriptorPoolSize& poolSize = poolSizes.emplace_back();
+				poolSize.type = PipelineUtils::GetDescriptorType(resource.Type);
+				poolSize.descriptorCount = resource.DescriptorCount;
+			}
+		}
+
+		VkDescriptorPoolCreateInfo descriptorPoolInfo{};
+		descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolInfo.poolSizeCount = (uint32_t)poolSizes.size();
+		descriptorPoolInfo.pPoolSizes = poolSizes.data();
+		descriptorPoolInfo.maxSets = m_DescriptorCount;
+
+		VK_CHECK(vkCreateDescriptorPool(m_Context->GetDevice(), &descriptorPoolInfo, nullptr, &m_DescriptorPool));
+	}
+
+	void Pipeline::CreateDescriptorSets()
+	{
+		m_DescriptorSets.resize(m_DescriptorSetLayouts.size());
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = m_DescriptorPool;
+		allocInfo.descriptorSetCount = (uint32_t)m_DescriptorSetLayouts.size();
+		allocInfo.pSetLayouts = m_DescriptorSetLayouts.data();
+
+		VK_CHECK(vkAllocateDescriptorSets(m_Context->GetDevice(), &allocInfo, m_DescriptorSets.data()));
 	}
 
 	VkShaderModule Pipeline::CreateShaderModule(VkShaderStageFlagBits stage, std::string_view path)

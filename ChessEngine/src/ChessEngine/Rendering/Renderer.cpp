@@ -55,6 +55,11 @@ namespace ChessEngine {
 		return std::make_shared<IndexBuffer>(indexCount, data, m_RendererContext, m_RendererBackend);
 	}
 
+	std::shared_ptr<UniformBuffer> Renderer::CreateUniformBuffer(size_t dataSize, const void* data)
+	{
+		return std::make_shared<UniformBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
+	}
+
 	void Renderer::BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const
 	{
 		m_RendererBackend->BindPipeline(pipeline);

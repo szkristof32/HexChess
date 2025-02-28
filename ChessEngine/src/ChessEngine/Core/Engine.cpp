@@ -59,6 +59,9 @@ namespace ChessEngine {
 	void Engine::OnResize(uint32_t width, uint32_t height)
 	{
 		m_Renderer->OnResize(width, height);
+
+		if (m_Client)
+			m_Client->OnResize(width, height);
 	}
 
 }

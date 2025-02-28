@@ -12,6 +12,7 @@ namespace HexChess {
 		virtual void OnInit() override;
 
 		virtual void OnUpdate(float deltaInSeconds) override;
+		virtual void OnResize(uint32_t width, uint32_t height) override;
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 

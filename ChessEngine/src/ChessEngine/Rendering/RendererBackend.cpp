@@ -141,7 +141,13 @@ namespace ChessEngine {
 
 	void RendererBackend::BindPipeline(std::weak_ptr<Pipeline> pipeline) const
 	{
-		vkCmdBindPipeline(m_CommandBuffers[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.lock()->GetPipeline());
+		auto pLine = pipeline.lock();
+
+		const auto& descriptorSets = pLine->GetDescriptorSets();
+		vkCmdBindDescriptorSets(m_CommandBuffers[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pLine->GetPipelineLayout(),
+			0, (uint32_t)descriptorSets.size(), descriptorSets.data(), 0, nullptr);
+
+		vkCmdBindPipeline(m_CommandBuffers[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pLine->GetPipeline());
 	}
 
 	void RendererBackend::BindVertexBuffer(std::weak_ptr<VertexBuffer> vertexBuffer) const

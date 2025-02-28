@@ -37,4 +37,21 @@ namespace ChessEngine {
 		VkDeviceMemory m_Memory;
 	};
 
+	class UniformBuffer
+	{
+	public:
+		UniformBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend);
+		~UniformBuffer();
+
+		VkBuffer GetBuffer() const { return m_Buffer; }
+
+		void SetData(size_t dataSize, const void* data);
+	private:
+		std::shared_ptr<RendererContext> m_Context;
+		std::shared_ptr<RendererBackend> m_Backend;
+
+		VkBuffer m_Buffer;
+		VkDeviceMemory m_Memory;
+	};
+
 }
