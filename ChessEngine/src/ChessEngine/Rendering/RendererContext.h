@@ -40,7 +40,7 @@ namespace ChessEngine {
 
 		VkQueue GetGraphicsQueue() const { return m_GraphicsQueue; }
 		uint32_t GetGraphicsQueueFamilyIndex() const { return m_GraphicsQueueFamily; }
-		const SwapchainFormatInfo& GetSwapchainFormatInfo() const { return m_SwapchainFormat; }
+		const SwapchainFormatInfo& GetSwapchainFormatInfo();
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);

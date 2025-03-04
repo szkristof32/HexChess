@@ -185,7 +185,7 @@ namespace ChessEngine {
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		allocInfo.commandPool = m_CommandPool;
 		allocInfo.commandBufferCount = 1;
-		
+
 		VkCommandBuffer commandBuffer;
 		VK_CHECK(vkAllocateCommandBuffers(m_Context->GetDevice(), &allocInfo, &commandBuffer));
 
@@ -230,19 +230,21 @@ namespace ChessEngine {
 			glfwWaitEvents();
 		}
 
+		SwapchainFormatInfo swapchainFormat = m_Context->GetSwapchainFormatInfo();
+
 		if (!oldSwapchain)
 		{
-			SwapchainFormatInfo swapchainFormat = m_Context->GetSwapchainFormatInfo();
 
 			m_SurfaceFormat = ChooseSurfaceFormat(swapchainFormat.Formats);
 			m_PresentMode = ChoosePresentMode(swapchainFormat.PresentModes);
-			m_SwapchainExtent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
 			m_DepthFormat = m_Context->FindSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
 			CreateSwapchainRenderPass();
 			CreateCommandBuffers();
 			CreateSyncObjects();
 		}
+
+		m_SwapchainExtent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
 
 		m_Context->WaitIdle();
 
@@ -505,23 +507,20 @@ namespace ChessEngine {
 	VkExtent2D RendererBackend::ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 	{
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-		{
 			return capabilities.currentExtent;
-		}
-		else {
-			int width, height;
-			glfwGetFramebufferSize(m_WindowHandle, &width, &height);
 
-			VkExtent2D actualExtent = {
-				(uint32_t)width,
-				(uint32_t)height
-			};
+		int width, height;
+		glfwGetFramebufferSize(m_WindowHandle, &width, &height);
 
-			actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-			actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+		VkExtent2D actualExtent = {
+			(uint32_t)width,
+			(uint32_t)height
+		};
 
-			return actualExtent;
-		}
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+		return actualExtent;
 	}
 
 }

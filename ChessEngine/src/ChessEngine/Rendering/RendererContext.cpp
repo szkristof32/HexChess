@@ -60,6 +60,12 @@ namespace ChessEngine {
 		vkDeviceWaitIdle(m_Device);
 	}
 
+	const SwapchainFormatInfo& RendererContext::GetSwapchainFormatInfo()
+	{
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, m_Surface, &m_SwapchainFormat.Capabilities);
+		return m_SwapchainFormat;
+	}
+
 	uint32_t RendererContext::FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 	{
 		VkPhysicalDeviceMemoryProperties memoryProperties;
