@@ -43,6 +43,7 @@ namespace ChessEngine {
 		const SwapchainFormatInfo& GetSwapchainFormatInfo() const { return m_SwapchainFormat; }
 
 		uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+		VkFormat FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	private:
 		void CreateInstance();
 		void PickPhysicalDevice();

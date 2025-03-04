@@ -33,6 +33,10 @@ namespace ChessEngine {
 			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
 		}
 
+		vkFreeMemory(m_Context->GetDevice(), m_DepthMemory, nullptr);
+		vkDestroyImageView(m_Context->GetDevice(), m_DepthImageView, nullptr);
+		vkDestroyImage(m_Context->GetDevice(), m_DepthImage, nullptr);
+
 		vkDestroyCommandPool(m_Context->GetDevice(), m_CommandPool, nullptr);
 
 		vkDestroyRenderPass(m_Context->GetDevice(), m_SwapchainRenderPass, nullptr);
@@ -62,8 +66,9 @@ namespace ChessEngine {
 		VK_CHECK(vkResetCommandBuffer(m_CommandBuffers[m_FrameIndex], 0));
 		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffers[m_FrameIndex], &commandBufferBegin));
 
-		VkClearValue clearColour{};
-		clearColour.color = { 1.0f, 0.0f, 1.0f, 1.0f };
+		std::array<VkClearValue, 2> clearColours{};
+		clearColours[0].color = { 1.0f, 0.0f, 1.0f, 1.0f };
+		clearColours[1].depthStencil = { 1.0f, 0 };
 
 		VkRenderPassBeginInfo renderPassBegin{};
 		renderPassBegin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -71,8 +76,8 @@ namespace ChessEngine {
 		renderPassBegin.framebuffer = m_SwapchainFramebuffers[m_ImageIndex];
 		renderPassBegin.renderArea.offset = { 0, 0 };
 		renderPassBegin.renderArea.extent = m_SwapchainExtent;
-		renderPassBegin.clearValueCount = 1;
-		renderPassBegin.pClearValues = &clearColour;
+		renderPassBegin.clearValueCount = (uint32_t)clearColours.size();
+		renderPassBegin.pClearValues = clearColours.data();
 
 		vkCmdBeginRenderPass(m_CommandBuffers[m_FrameIndex], &renderPassBegin, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -232,6 +237,7 @@ namespace ChessEngine {
 			m_SurfaceFormat = ChooseSurfaceFormat(swapchainFormat.Formats);
 			m_PresentMode = ChoosePresentMode(swapchainFormat.PresentModes);
 			m_SwapchainExtent = ChooseSwapchainExtent(swapchainFormat.Capabilities);
+			m_DepthFormat = m_Context->FindSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
 			CreateSwapchainRenderPass();
 			CreateCommandBuffers();
@@ -245,8 +251,13 @@ namespace ChessEngine {
 			vkDestroyImageView(m_Context->GetDevice(), m_SwapchainImageViews[i], nullptr);
 		}
 
+		vkFreeMemory(m_Context->GetDevice(), m_DepthMemory, nullptr);
+		vkDestroyImageView(m_Context->GetDevice(), m_DepthImageView, nullptr);
+		vkDestroyImage(m_Context->GetDevice(), m_DepthImage, nullptr);
+
 		CreateSwapchain();
 		GetImageResources();
+		CreateDepthResources();
 		CreateFramebuffers();
 
 		vkDestroySwapchainKHR(m_Context->GetDevice(), oldSwapchain, nullptr);
@@ -311,6 +322,41 @@ namespace ChessEngine {
 		}
 	}
 
+	void RendererBackend::CreateDepthResources()
+	{
+		VkImageCreateInfo depthImageInfo{};
+		depthImageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		depthImageInfo.imageType = VK_IMAGE_TYPE_2D;
+		depthImageInfo.extent.width = m_SwapchainExtent.width;
+		depthImageInfo.extent.height = m_SwapchainExtent.height;
+		depthImageInfo.extent.depth = 1;
+		depthImageInfo.mipLevels = 1;
+		depthImageInfo.arrayLayers = 1;
+		depthImageInfo.format = m_DepthFormat;
+		depthImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		depthImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		depthImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		depthImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+
+		VK_CHECK(vkCreateImage(m_Context->GetDevice(), &depthImageInfo, nullptr, &m_DepthImage));
+
+		ImageUtils::AllocateMemory(m_DepthImage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_DepthMemory);
+
+		VkImageViewCreateInfo depthImageViewInfo{};
+		depthImageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		depthImageViewInfo.image = m_DepthImage;
+		depthImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		depthImageViewInfo.format = m_DepthFormat;
+		depthImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		depthImageViewInfo.subresourceRange.baseMipLevel = 0;
+		depthImageViewInfo.subresourceRange.levelCount = 1;
+		depthImageViewInfo.subresourceRange.baseArrayLayer = 0;
+		depthImageViewInfo.subresourceRange.layerCount = 1;
+
+		VK_CHECK(vkCreateImageView(m_Context->GetDevice(), &depthImageViewInfo, nullptr, &m_DepthImageView));
+	}
+
 	void RendererBackend::CreateSwapchainRenderPass()
 	{
 		VkAttachmentDescription colourAttachment{};
@@ -327,17 +373,38 @@ namespace ChessEngine {
 		colourAttachmentReference.attachment = 0;
 		colourAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+		VkAttachmentDescription depthAttachment{};
+		depthAttachment.format = m_DepthFormat;
+		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depthAttachmentReference{};
+		depthAttachmentReference.attachment = 1;
+		depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colourAttachmentReference;
+		subpass.pDepthStencilAttachment = &depthAttachmentReference;
+
+		std::array attachments = {
+			colourAttachment,
+			depthAttachment
+		};
 
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = 1;
-		renderPassInfo.pAttachments = &colourAttachment;
+		renderPassInfo.attachmentCount = (uint32_t)attachments.size();
+		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
+		// TODO see if dependencies are necessary
 
 		VK_CHECK(vkCreateRenderPass(m_Context->GetDevice(), &renderPassInfo, nullptr, &m_SwapchainRenderPass));
 	}
@@ -348,11 +415,16 @@ namespace ChessEngine {
 
 		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
+			std::array attachments = {
+				m_SwapchainImageViews[i],
+				m_DepthImageView
+			};
+
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			framebufferInfo.renderPass = m_SwapchainRenderPass;
-			framebufferInfo.attachmentCount = 1;
-			framebufferInfo.pAttachments = &m_SwapchainImageViews[i];
+			framebufferInfo.attachmentCount = (uint32_t)attachments.size();
+			framebufferInfo.pAttachments = attachments.data();
 			framebufferInfo.width = m_SwapchainExtent.width;
 			framebufferInfo.height = m_SwapchainExtent.height;
 			framebufferInfo.layers = 1;

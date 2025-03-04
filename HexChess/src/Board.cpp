@@ -28,12 +28,18 @@ namespace HexChess {
 			{ { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
 			{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } },
 			{ { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } },
-			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }
+			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },
+
+			{ { -0.5f, 0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+			{ { -0.5f, -0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } },
+			{ { 0.5f, 0.5f, -0.5f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } },
+			{ { 0.5f, -0.5f, -0.5f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } },
 		};
 		m_BoardVertexBuffer = m_Renderer->CreateVertexBuffer(vertices.size() * sizeof(BoardVertex), vertices.data());
 
 		const std::vector<uint32_t> indices = {
-			0, 1, 2, 2, 1, 3
+			0, 1, 2, 2, 1, 3,
+			4, 5, 6, 6, 5, 7
 		};
 		m_BoardIndexBuffer = m_Renderer->CreateIndexBuffer(indices.size(), indices.data());
 
@@ -61,7 +67,7 @@ namespace HexChess {
 		m_Renderer->BindVertexBuffer(m_BoardVertexBuffer);
 		m_Renderer->BindIndexBuffer(m_BoardIndexBuffer);
 
-		m_Renderer->DrawIndexed(6);
+		m_Renderer->DrawIndexed(12);
 	}
 
 	void Board::OnResize(uint32_t width, uint32_t height)

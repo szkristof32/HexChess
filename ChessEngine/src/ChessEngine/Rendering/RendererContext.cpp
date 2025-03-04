@@ -77,6 +77,22 @@ namespace ChessEngine {
 		return -1;
 	}
 
+	VkFormat RendererContext::FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (auto format : candidates)
+		{
+			VkFormatProperties properties;
+			vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, format, &properties);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (properties.linearTilingFeatures & features) == features)
+				return format;
+			else if (tiling == VK_IMAGE_TILING_OPTIMAL && (properties.optimalTilingFeatures & features) == features)
+				return format;
+		}
+
+		return VK_FORMAT_UNDEFINED;
+	}
+
 	void RendererContext::CreateInstance()
 	{
 #ifdef DEBUG

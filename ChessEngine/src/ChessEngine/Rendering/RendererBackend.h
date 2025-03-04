@@ -37,6 +37,7 @@ namespace ChessEngine {
 		void Reload();
 		void CreateSwapchain();
 		void GetImageResources();
+		void CreateDepthResources();
 		void CreateSwapchainRenderPass();
 		void CreateFramebuffers();
 		void CreateCommandBuffers();
@@ -64,6 +65,11 @@ namespace ChessEngine {
 
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
+
+		VkImage m_DepthImage = nullptr;
+		VkImageView m_DepthImageView = nullptr;
+		VkDeviceMemory m_DepthMemory = nullptr;
+		VkFormat m_DepthFormat;
 
 		std::vector<VkFramebuffer> m_SwapchainFramebuffers;
 

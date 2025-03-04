@@ -241,6 +241,14 @@ namespace ChessEngine {
 		colourBlending.pAttachments = &colourBlendAttachment;
 		colourBlending.logicOpEnable = false;
 
+		VkPipelineDepthStencilStateCreateInfo depthStencil{};
+		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencil.depthTestEnable = true;
+		depthStencil.depthWriteEnable = true;
+		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthBoundsTestEnable = false;
+		depthStencil.stencilTestEnable = false;
+
 		CreateDescriptorSetLayout();
 		CreateDescriptorPool();
 		CreateDescriptorSets();
@@ -264,6 +272,7 @@ namespace ChessEngine {
 		pipelineInfo.pRasterizationState = &rasteriser;
 		pipelineInfo.pMultisampleState = &multisampling;
 		pipelineInfo.pColorBlendState = &colourBlending;
+		pipelineInfo.pDepthStencilState = &depthStencil;
 		pipelineInfo.pDynamicState = &dynamicState;
 		pipelineInfo.layout = m_PipelineLayout;
 		pipelineInfo.renderPass = m_Backend->GetSwapchainRenderPass();
