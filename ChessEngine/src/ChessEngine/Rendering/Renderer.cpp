@@ -1,11 +1,6 @@
 #include "pch.h"
 #include "Renderer.h"
 
-#include "ChessEngine/Rendering/RendererContext.h"
-#include "ChessEngine/Rendering/RendererBackend.h"
-#include "ChessEngine/Rendering/Pipeline.h"
-#include "ChessEngine/Rendering/Buffers.h"
-
 namespace ChessEngine {
 
 	Renderer::Renderer(GLFWwindow* windowHandle)
@@ -58,6 +53,11 @@ namespace ChessEngine {
 	std::shared_ptr<UniformBuffer> Renderer::CreateUniformBuffer(size_t dataSize, const void* data)
 	{
 		return std::make_shared<UniformBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
+	}
+
+	std::shared_ptr<Image> Renderer::CreateImage(const std::filesystem::path& filepath)
+	{
+		return std::make_shared<Image>(filepath, m_RendererContext, m_RendererBackend);
 	}
 
 	void Renderer::BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const

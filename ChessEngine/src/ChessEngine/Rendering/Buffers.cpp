@@ -10,7 +10,7 @@ namespace ChessEngine {
 
 	namespace BufferUtils {
 
-		static void CreateBuffer(size_t dataSize, VkBufferUsageFlags usage, VkDevice device, VkBuffer* outBuffer)
+		void CreateBuffer(size_t dataSize, VkBufferUsageFlags usage, VkDevice device, VkBuffer* outBuffer)
 		{
 			VkBufferCreateInfo bufferInfo{};
 			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -21,7 +21,7 @@ namespace ChessEngine {
 			VK_CHECK(vkCreateBuffer(device, &bufferInfo, nullptr, outBuffer));
 		}
 
-		static void AllocateMemory(VkBuffer buffer, VkMemoryPropertyFlags memoryProperties, std::weak_ptr<RendererContext> context, VkDeviceMemory* outMemory)
+		void AllocateMemory(VkBuffer buffer, VkMemoryPropertyFlags memoryProperties, std::weak_ptr<RendererContext> context, VkDeviceMemory* outMemory)
 		{
 			auto ctx = context.lock();
 
@@ -37,7 +37,7 @@ namespace ChessEngine {
 			VK_CHECK(vkBindBufferMemory(ctx->GetDevice(), buffer, *outMemory, 0));
 		}
 
-		static void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer commandBuffer)
+		void CopyFromBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer commandBuffer)
 		{
 			VkBufferCopy bufferCopy{};
 			bufferCopy.srcOffset = 0;
@@ -67,7 +67,7 @@ namespace ChessEngine {
 		vkUnmapMemory(m_Context->GetDevice(), stagingBufferMemory);
 
 		VkCommandBuffer commandBuffer = m_Backend->AllocateNewCommandBuffer();
-		BufferUtils::CopyBuffer(stagingBuffer, m_Buffer, dataSize, commandBuffer);
+		BufferUtils::CopyFromBuffer(stagingBuffer, m_Buffer, dataSize, commandBuffer);
 		m_Backend->SubmitCommandBuffer(commandBuffer);
 
 		vkFreeMemory(m_Context->GetDevice(), stagingBufferMemory, nullptr);
@@ -98,7 +98,7 @@ namespace ChessEngine {
 		vkUnmapMemory(m_Context->GetDevice(), stagingBufferMemory);
 
 		VkCommandBuffer commandBuffer = m_Backend->AllocateNewCommandBuffer();
-		BufferUtils::CopyBuffer(stagingBuffer, m_Buffer, indexCount * sizeof(uint32_t), commandBuffer);
+		BufferUtils::CopyFromBuffer(stagingBuffer, m_Buffer, indexCount * sizeof(uint32_t), commandBuffer);
 		m_Backend->SubmitCommandBuffer(commandBuffer);
 
 		vkFreeMemory(m_Context->GetDevice(), stagingBufferMemory, nullptr);

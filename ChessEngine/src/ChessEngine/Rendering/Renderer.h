@@ -1,18 +1,14 @@
 #pragma once
 
+#include "ChessEngine/Rendering/RendererContext.h"
+#include "ChessEngine/Rendering/RendererBackend.h"
+#include "ChessEngine/Rendering/Pipeline.h"
+#include "ChessEngine/Rendering/Buffers.h"
+#include "ChessEngine/Rendering/Image.h"
+
 struct GLFWwindow;
 
 namespace ChessEngine {
-
-	class RendererContext;
-	class RendererBackend;
-
-	struct PipelineSpecification;
-	class Pipeline;
-
-	class VertexBuffer;
-	class IndexBuffer;
-	class UniformBuffer;
 
 	class Renderer
 	{
@@ -30,6 +26,8 @@ namespace ChessEngine {
 		std::shared_ptr<VertexBuffer> CreateVertexBuffer(size_t dataSize, const void* data);
 		std::shared_ptr<IndexBuffer> CreateIndexBuffer(size_t indexCount, const uint32_t* data);
 		std::shared_ptr<UniformBuffer> CreateUniformBuffer(size_t dataSize, const void* data);
+
+		std::shared_ptr<Image> CreateImage(const std::filesystem::path& filepath);
 
 		void BindPipeline(const std::shared_ptr<Pipeline>& pipeline) const;
 		void BindVertexBuffer(const std::shared_ptr<VertexBuffer>& vertexBuffer) const;

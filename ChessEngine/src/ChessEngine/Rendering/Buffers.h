@@ -7,6 +7,14 @@ namespace ChessEngine {
 	class RendererContext;
 	class RendererBackend;
 
+	namespace BufferUtils {
+
+		void CreateBuffer(size_t dataSize, VkBufferUsageFlags usage, VkDevice device, VkBuffer* outBuffer);
+		void AllocateMemory(VkBuffer buffer, VkMemoryPropertyFlags memoryProperties, std::weak_ptr<::ChessEngine::RendererContext> context, VkDeviceMemory* outMemory);
+		void CopyFromBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer commandBuffer);
+
+	}
+
 	class VertexBuffer
 	{
 	public:

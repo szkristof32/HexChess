@@ -72,6 +72,7 @@ namespace ChessEngine {
 			switch (type)
 			{
 				case ShaderResourceType::Uniform:	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				case ShaderResourceType::Sampler:	return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			}
 
 			return (VkDescriptorType)-1;
@@ -104,35 +105,37 @@ namespace ChessEngine {
 		bufferInfo.offset = 0;
 		bufferInfo.range = VK_WHOLE_SIZE;
 
-		ShaderResource shaderResource;
-		uint32_t descriptorSetIndex = 0;
-		bool foundResource = false;
-
-		for (const auto& [index, descriptorSet] : m_ReflectionData)
-		{
-			for (const auto& resource : descriptorSet.Resources)
-			{
-				if (resource.Name == name && resource.Type == ShaderResourceType::Uniform)
-				{
-					shaderResource = resource;
-					descriptorSetIndex = index;
-					foundResource = true;
-					break;
-				}
-			}
-
-			if (foundResource)
-				break;
-		}
+		auto shaderResource = FindShaderResource(name, ShaderResourceType::Uniform);
 
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_DescriptorSets[descriptorSetIndex];
+		descriptorWrite.dstSet = m_DescriptorSets[shaderResource.DescriptorSetIndex];
 		descriptorWrite.dstBinding = shaderResource.Binding;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		descriptorWrite.descriptorCount = shaderResource.DescriptorCount;
 		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &descriptorWrite, 0, nullptr);
+	}
+
+	void Pipeline::WriteDescriptor(std::string_view name, std::weak_ptr<Image> image)
+	{
+		VkDescriptorImageInfo imageInfo{};
+		imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		imageInfo.imageView = image.lock()->GetImageView();
+		imageInfo.sampler = image.lock()->GetSampler();
+
+		auto shaderResource = FindShaderResource(name, ShaderResourceType::Sampler);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSets[shaderResource.DescriptorSetIndex];
+		descriptorWrite.dstBinding = shaderResource.Binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorWrite.descriptorCount = shaderResource.DescriptorCount;
+		descriptorWrite.pImageInfo = &imageInfo;
 
 		vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
@@ -339,6 +342,20 @@ namespace ChessEngine {
 		allocInfo.pSetLayouts = m_DescriptorSetLayouts.data();
 
 		VK_CHECK(vkAllocateDescriptorSets(m_Context->GetDevice(), &allocInfo, m_DescriptorSets.data()));
+	}
+
+	ShaderResource Pipeline::FindShaderResource(std::string_view name, ShaderResourceType type)
+	{
+		for (const auto& [index, descriptorSet] : m_ReflectionData)
+		{
+			for (const auto& resource : descriptorSet.Resources)
+			{
+				if (resource.Name == name && resource.Type == type)
+					return resource;
+			}
+		}
+
+		return {};
 	}
 
 	VkShaderModule Pipeline::CreateShaderModule(VkShaderStageFlagBits stage, std::string_view path)

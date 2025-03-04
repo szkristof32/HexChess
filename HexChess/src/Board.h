@@ -3,6 +3,7 @@
 #include <ChessEngine/Rendering/Renderer.h>
 #include <ChessEngine/Rendering/Pipeline.h>
 #include <ChessEngine/Rendering/Buffers.h>
+#include <ChessEngine/Rendering/Image.h>
 
 #include <glm/glm.hpp>
 
@@ -12,6 +13,7 @@ namespace HexChess {
 	{
 		glm::vec3 Position;
 		glm::vec3 Colour;
+		glm::vec2 UvCoords;
 	};
 
 	struct BoardUniformBuffer
@@ -36,6 +38,8 @@ namespace HexChess {
 
 		std::shared_ptr<ChessEngine::VertexBuffer> m_BoardVertexBuffer;
 		std::shared_ptr<ChessEngine::IndexBuffer> m_BoardIndexBuffer;
+
+		std::shared_ptr<ChessEngine::Image> m_TestImage;
 
 		std::shared_ptr<ChessEngine::UniformBuffer> m_BoardUniformBuffer;
 		BoardUniformBuffer m_BoardUniforms;

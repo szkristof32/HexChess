@@ -3,6 +3,7 @@
 #include "ChessEngine/Rendering/ShaderReflection.h"
 
 #include "ChessEngine/Rendering/Buffers.h"
+#include "ChessEngine/Rendering/Image.h"
 #include "ChessEngine/Rendering/RendererContext.h"
 #include "ChessEngine/Rendering/RendererBackend.h"
 
@@ -32,6 +33,7 @@ namespace ChessEngine {
 		~Pipeline();
 
 		void WriteDescriptor(std::string_view name, std::weak_ptr<UniformBuffer> uniformBuffer);
+		void WriteDescriptor(std::string_view name, std::weak_ptr<Image> image);
 
 		VkPipeline GetPipeline() const { return m_Pipeline; }
 		VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
@@ -41,6 +43,8 @@ namespace ChessEngine {
 		void CreateDescriptorSetLayout();
 		void CreateDescriptorPool();
 		void CreateDescriptorSets();
+
+		ShaderResource FindShaderResource(std::string_view name, ShaderResourceType type);
 
 		VkShaderModule CreateShaderModule(VkShaderStageFlagBits stage, std::string_view path);
 	private:

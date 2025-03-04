@@ -7,7 +7,7 @@ namespace ChessEngine {
 	enum class ShaderResourceType
 	{
 		None = 0,
-		Uniform
+		Uniform, Sampler
 	};
 
 	enum class ShaderStage
@@ -23,6 +23,7 @@ namespace ChessEngine {
 		uint32_t Binding;
 		uint32_t DescriptorCount;
 		uint32_t Size;
+		uint32_t DescriptorSetIndex;
 
 		ShaderResourceType Type;
 		ShaderStage Stage;

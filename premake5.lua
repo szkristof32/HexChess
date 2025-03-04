@@ -22,6 +22,10 @@ workspace "HexChess"
 		"Release"
 	}
 
+	filter "action:vs*"
+		linkoptions { "/ignore:4099" }
+        disablewarnings { "4068" }
+
 	filter "system:windows"
 		systemversion "latest"
 
@@ -61,6 +65,7 @@ project "ChessEngine"
 
 		"ChessEngine/vendor/GLFW/include",
 		"ChessEngine/vendor/glm",
+		"ChessEngine/vendor/stb",
 		"%{VULKAN_SDK}/Include"
 	}
 
@@ -109,6 +114,7 @@ project "HexChess"
 
 		"ChessEngine/src",
 		"ChessEngine/vendor/glm",
+		"ChessEngine/vendor/stb",
 		"%{VULKAN_SDK}/Include"
 	}
 

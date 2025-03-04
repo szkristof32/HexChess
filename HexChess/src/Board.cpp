@@ -18,16 +18,17 @@ namespace HexChess {
 		boardPipelineSpec.ShaderBinaries[ShaderStage::Fragment] = "Resources/Shaders/BoardShader.frag.spv";
 		boardPipelineSpec.VertexInput = {
 			VertexDataType::Float3,
-			VertexDataType::Float3
+			VertexDataType::Float3,
+			VertexDataType::Float2
 		};
 
 		m_BoardPipeline = m_Renderer->CreatePipeline(boardPipelineSpec);
 
 		const std::vector<BoardVertex> vertices = {
-			{ { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-			{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-			{ { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f } },
-			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f } }
+			{ { -0.5f, 0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f } },
+			{ { -0.5f, -0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f } },
+			{ { 0.5f, 0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f } },
+			{ { 0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f } }
 		};
 		m_BoardVertexBuffer = m_Renderer->CreateVertexBuffer(vertices.size() * sizeof(BoardVertex), vertices.data());
 
@@ -42,6 +43,9 @@ namespace HexChess {
 
 		m_BoardUniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_BoardUniforms), &m_BoardUniforms);
 		m_BoardPipeline->WriteDescriptor("Uniforms", m_BoardUniformBuffer);
+
+		m_TestImage = m_Renderer->CreateImage("Resources/Images/TestImage.png");
+		m_BoardPipeline->WriteDescriptor("TextureSampler", m_TestImage);
 	}
 
 	Board::~Board()
