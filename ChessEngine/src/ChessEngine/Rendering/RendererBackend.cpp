@@ -33,6 +33,10 @@ namespace ChessEngine {
 			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
 		}
 
+		vkFreeMemory(m_Context->GetDevice(), m_RenderTargetMemory, nullptr);
+		vkDestroyImageView(m_Context->GetDevice(), m_RenderTargetView, nullptr);
+		vkDestroyImage(m_Context->GetDevice(), m_RenderTarget, nullptr);
+
 		vkFreeMemory(m_Context->GetDevice(), m_DepthMemory, nullptr);
 		vkDestroyImageView(m_Context->GetDevice(), m_DepthImageView, nullptr);
 		vkDestroyImage(m_Context->GetDevice(), m_DepthImage, nullptr);
@@ -238,6 +242,7 @@ namespace ChessEngine {
 			m_SurfaceFormat = ChooseSurfaceFormat(swapchainFormat.Formats);
 			m_PresentMode = ChoosePresentMode(swapchainFormat.PresentModes);
 			m_DepthFormat = m_Context->FindSupportedFormat({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT }, VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+			m_MSAASamples = GetMSAASamples();
 
 			CreateSwapchainRenderPass();
 			CreateCommandBuffers();
@@ -252,6 +257,10 @@ namespace ChessEngine {
 			vkDestroyFramebuffer(m_Context->GetDevice(), m_SwapchainFramebuffers[i], nullptr);
 			vkDestroyImageView(m_Context->GetDevice(), m_SwapchainImageViews[i], nullptr);
 		}
+
+		vkFreeMemory(m_Context->GetDevice(), m_RenderTargetMemory, nullptr);
+		vkDestroyImageView(m_Context->GetDevice(), m_RenderTargetView, nullptr);
+		vkDestroyImage(m_Context->GetDevice(), m_RenderTarget, nullptr);
 
 		vkFreeMemory(m_Context->GetDevice(), m_DepthMemory, nullptr);
 		vkDestroyImageView(m_Context->GetDevice(), m_DepthImageView, nullptr);
@@ -322,6 +331,38 @@ namespace ChessEngine {
 
 			VK_CHECK(vkCreateImageView(m_Context->GetDevice(), &imageViewInfo, nullptr, &m_SwapchainImageViews[i]));
 		}
+
+		VkImageCreateInfo imageInfo{};
+		imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageInfo.extent.width = m_SwapchainExtent.width;
+		imageInfo.extent.height = m_SwapchainExtent.height;
+		imageInfo.extent.depth = 1;
+		imageInfo.mipLevels = 1;
+		imageInfo.arrayLayers = 1;
+		imageInfo.format = m_SurfaceFormat.format;
+		imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		imageInfo.usage = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		imageInfo.samples = m_MSAASamples;
+
+		VK_CHECK(vkCreateImage(m_Context->GetDevice(), &imageInfo, nullptr, &m_RenderTarget));
+
+		ImageUtils::AllocateMemory(m_RenderTarget, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_RenderTargetMemory);
+
+		VkImageViewCreateInfo imageViewInfo{};
+		imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imageViewInfo.image = m_RenderTarget;
+		imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewInfo.format = m_SurfaceFormat.format;
+		imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageViewInfo.subresourceRange.baseMipLevel = 0;
+		imageViewInfo.subresourceRange.levelCount = 1;
+		imageViewInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewInfo.subresourceRange.layerCount = 1;
+
+		VK_CHECK(vkCreateImageView(m_Context->GetDevice(), &imageViewInfo, nullptr, &m_RenderTargetView));
 	}
 
 	void RendererBackend::CreateDepthResources()
@@ -339,7 +380,7 @@ namespace ChessEngine {
 		depthImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depthImageInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		depthImageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		depthImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthImageInfo.samples = m_MSAASamples;
 
 		VK_CHECK(vkCreateImage(m_Context->GetDevice(), &depthImageInfo, nullptr, &m_DepthImage));
 
@@ -363,7 +404,7 @@ namespace ChessEngine {
 	{
 		VkAttachmentDescription colourAttachment{};
 		colourAttachment.format = m_SurfaceFormat.format;
-		colourAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colourAttachment.samples = m_MSAASamples;
 		colourAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		colourAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		colourAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -377,7 +418,7 @@ namespace ChessEngine {
 
 		VkAttachmentDescription depthAttachment{};
 		depthAttachment.format = m_DepthFormat;
-		depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		depthAttachment.samples = m_MSAASamples;
 		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -389,15 +430,31 @@ namespace ChessEngine {
 		depthAttachmentReference.attachment = 1;
 		depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+		VkAttachmentDescription colourAttachmentResolve{};
+		colourAttachmentResolve.format = m_SurfaceFormat.format;
+		colourAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
+		colourAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colourAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colourAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colourAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colourAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colourAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colourAttachmentResolveReference{};
+		colourAttachmentResolveReference.attachment = 2;
+		colourAttachmentResolveReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 		VkSubpassDescription subpass{};
 		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colourAttachmentReference;
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
+		subpass.pResolveAttachments = &colourAttachmentResolveReference;
 
 		std::array attachments = {
 			colourAttachment,
-			depthAttachment
+			depthAttachment,
+			colourAttachmentResolve
 		};
 
 		VkRenderPassCreateInfo renderPassInfo{};
@@ -406,7 +463,6 @@ namespace ChessEngine {
 		renderPassInfo.pAttachments = attachments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
-		// TODO see if dependencies are necessary
 
 		VK_CHECK(vkCreateRenderPass(m_Context->GetDevice(), &renderPassInfo, nullptr, &m_SwapchainRenderPass));
 	}
@@ -418,8 +474,9 @@ namespace ChessEngine {
 		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
 			std::array attachments = {
+				m_RenderTargetView,
+				m_DepthImageView,
 				m_SwapchainImageViews[i],
-				m_DepthImageView
 			};
 
 			VkFramebufferCreateInfo framebufferInfo{};
@@ -521,6 +578,23 @@ namespace ChessEngine {
 		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
 		return actualExtent;
+	}
+
+	VkSampleCountFlagBits RendererBackend::GetMSAASamples()
+	{
+		VkPhysicalDeviceProperties properties;
+		vkGetPhysicalDeviceProperties(m_Context->GetPhysicalDevice(), &properties);
+
+		VkSampleCountFlags counts = properties.limits.framebufferColorSampleCounts & properties.limits.framebufferDepthSampleCounts;
+
+		if (counts & VK_SAMPLE_COUNT_64_BIT)	return VK_SAMPLE_COUNT_64_BIT;
+		if (counts & VK_SAMPLE_COUNT_32_BIT)	return VK_SAMPLE_COUNT_32_BIT;
+		if (counts & VK_SAMPLE_COUNT_16_BIT)	return VK_SAMPLE_COUNT_16_BIT;
+		if (counts & VK_SAMPLE_COUNT_8_BIT)		return VK_SAMPLE_COUNT_8_BIT;
+		if (counts & VK_SAMPLE_COUNT_4_BIT)		return VK_SAMPLE_COUNT_4_BIT;
+		if (counts & VK_SAMPLE_COUNT_2_BIT)		return VK_SAMPLE_COUNT_2_BIT;
+
+		return VK_SAMPLE_COUNT_1_BIT;
 	}
 
 }

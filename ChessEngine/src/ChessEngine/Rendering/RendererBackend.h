@@ -31,6 +31,8 @@ namespace ChessEngine {
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
 		VkCommandBuffer AllocateNewCommandBuffer();
 		void SubmitCommandBuffer(VkCommandBuffer commandBuffer);
+
+		VkSampleCountFlagBits GetMaxMSAASamples() const { return m_MSAASamples; }
 	public:
 		void OnResize(uint32_t width, uint32_t height);
 	private:
@@ -48,6 +50,7 @@ namespace ChessEngine {
 		VkSurfaceFormatKHR ChooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& formats);
 		VkPresentModeKHR ChoosePresentMode(const std::vector<VkPresentModeKHR>& presentModes);
 		VkExtent2D ChooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+		VkSampleCountFlagBits GetMSAASamples();
 	private:
 		std::shared_ptr<RendererContext> m_Context;
 		GLFWwindow* m_WindowHandle;
@@ -66,10 +69,16 @@ namespace ChessEngine {
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
 
+		VkImage m_RenderTarget = nullptr;
+		VkImageView m_RenderTargetView = nullptr;
+		VkDeviceMemory m_RenderTargetMemory = nullptr;
+
 		VkImage m_DepthImage = nullptr;
 		VkImageView m_DepthImageView = nullptr;
 		VkDeviceMemory m_DepthMemory = nullptr;
 		VkFormat m_DepthFormat;
+
+		VkSampleCountFlagBits m_MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
 		std::vector<VkFramebuffer> m_SwapchainFramebuffers;
 
