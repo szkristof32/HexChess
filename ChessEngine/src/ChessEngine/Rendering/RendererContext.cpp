@@ -167,12 +167,16 @@ namespace ChessEngine {
 
 		auto extensions = GetDeviceExtensions();
 
+		VkPhysicalDeviceFeatures features{};
+		features.samplerAnisotropy = true;
+
 		VkDeviceCreateInfo deviceInfo{};
 		deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceInfo.queueCreateInfoCount = 1;
 		deviceInfo.pQueueCreateInfos = &queueCreateInfo;
 		deviceInfo.enabledExtensionCount = (uint32_t)extensions.size();
 		deviceInfo.ppEnabledExtensionNames = extensions.data();
+		deviceInfo.pEnabledFeatures = &features;
 
 		VK_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceInfo, nullptr, &m_Device));
 
