@@ -7,3 +7,6 @@
 [submodule "ChessEngine/vendor/stb"]
 	path = ChessEngine/vendor/stb
 	url = https://github.com/nothings/stb
+[submodule "ChessEngine/vendor/imgui"]
+	path = ChessEngine/vendor/imgui
+	url = https://github.com/ocornut/imgui

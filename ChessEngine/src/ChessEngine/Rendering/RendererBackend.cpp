@@ -449,13 +449,15 @@ namespace ChessEngine {
 		subpass.colorAttachmentCount = 1;
 		subpass.pColorAttachments = &colourAttachmentReference;
 		subpass.pDepthStencilAttachment = &depthAttachmentReference;
-		subpass.pResolveAttachments = &colourAttachmentResolveReference;
+		if (m_MSAASamples != VK_SAMPLE_COUNT_1_BIT)
+			subpass.pResolveAttachments = &colourAttachmentResolveReference;
 
-		std::array attachments = {
+		std::vector attachments = {
 			colourAttachment,
-			depthAttachment,
-			colourAttachmentResolve
+			depthAttachment
 		};
+		if (m_MSAASamples != VK_SAMPLE_COUNT_1_BIT)
+			attachments.emplace_back(colourAttachmentResolve);
 
 		VkRenderPassCreateInfo renderPassInfo{};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -473,11 +475,18 @@ namespace ChessEngine {
 
 		for (uint32_t i = 0;i < m_SwapchainImageCount;i++)
 		{
-			std::array attachments = {
-				m_RenderTargetView,
-				m_DepthImageView,
-				m_SwapchainImageViews[i],
-			};
+			std::vector<VkImageView> attachments;
+			if (m_MSAASamples != VK_SAMPLE_COUNT_1_BIT)
+				attachments = {
+					m_RenderTargetView,
+					m_DepthImageView,
+					m_SwapchainImageViews[i],
+				};
+			else
+				attachments = {
+					m_SwapchainImageViews[i],
+					m_DepthImageView
+				};
 
 			VkFramebufferCreateInfo framebufferInfo{};
 			framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -534,7 +543,7 @@ namespace ChessEngine {
 	{
 		for (const auto& availableFormat : formats)
 		{
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM &&
 				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
 			{
 				return availableFormat;
@@ -582,6 +591,10 @@ namespace ChessEngine {
 
 	VkSampleCountFlagBits RendererBackend::GetMSAASamples()
 	{
+		constexpr bool forceDisableMSAA = true;
+		if (forceDisableMSAA)
+			return VK_SAMPLE_COUNT_1_BIT;
+
 		VkPhysicalDeviceProperties properties;
 		vkGetPhysicalDeviceProperties(m_Context->GetPhysicalDevice(), &properties);
 

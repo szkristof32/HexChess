@@ -29,10 +29,12 @@ namespace ChessEngine {
 		void DrawIndexed(uint32_t indexCount) const;
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
+		VkCommandBuffer GetCurrentCommandBuffer() const { return m_CommandBuffers[m_FrameIndex]; }
 		VkCommandBuffer AllocateNewCommandBuffer();
 		void SubmitCommandBuffer(VkCommandBuffer commandBuffer);
 
 		VkSampleCountFlagBits GetMaxMSAASamples() const { return m_MSAASamples; }
+		uint32_t GetImageCount() const { return m_SwapchainImageCount; }
 	public:
 		void OnResize(uint32_t width, uint32_t height);
 	private:

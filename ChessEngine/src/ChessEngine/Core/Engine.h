@@ -5,6 +5,7 @@ namespace ChessEngine {
 	class Window;
 	class Renderer;
 	class Client;
+	class ImGuiManager;
 
 	template<typename T>
 	struct NoDeleteter
@@ -24,6 +25,7 @@ namespace ChessEngine {
 	private:
 		std::unique_ptr<Window> m_Window;
 		std::shared_ptr<Renderer> m_Renderer;
+		std::unique_ptr<ImGuiManager> m_ImGuiManager;
 
 		std::unique_ptr<Client, NoDeleteter<Client>> m_Client;
 		

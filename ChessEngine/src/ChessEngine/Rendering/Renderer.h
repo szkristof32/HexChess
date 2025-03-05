@@ -21,6 +21,9 @@ namespace ChessEngine {
 
 		void WaitIdle() const;
 
+		const std::shared_ptr<RendererContext>& GetRendererContext() const { return m_RendererContext; }
+		const std::shared_ptr<RendererBackend>& GetRendererBackend() const { return m_RendererBackend; }
+
 		std::shared_ptr<Pipeline> CreatePipeline(const PipelineSpecification& spec);
 
 		std::shared_ptr<VertexBuffer> CreateVertexBuffer(size_t dataSize, const void* data);

@@ -124,4 +124,45 @@ project "glm"
 		"ChessEngine/vendor/glm"
 	}
 	
+project "ImGui"
+	location "ChessEngine/vendor/imgui"
+
+	kind "StaticLib"
+	language "C++"
+    staticruntime "off"
+
+	targetdir ("bin/%{prj.name}")
+	objdir ("bin-int/%{prj.name}")
+
+	files
+	{
+		"ChessEngine/vendor/imgui/imconfig.h",
+		"ChessEngine/vendor/imgui/imgui.h",
+		"ChessEngine/vendor/imgui/imgui.cpp",
+		"ChessEngine/vendor/imgui/imgui_draw.cpp",
+		"ChessEngine/vendor/imgui/imgui_internal.h",
+		"ChessEngine/vendor/imgui/imgui_tables.cpp",
+		"ChessEngine/vendor/imgui/imgui_widgets.cpp",
+		"ChessEngine/vendor/imgui/imstb_rectpack.h",
+		"ChessEngine/vendor/imgui/imstb_textedit.h",
+		"ChessEngine/vendor/imgui/imstb_truetype.h",
+		"ChessEngine/vendor/imgui/imgui_demo.cpp"
+	}
+
+	filter "system:windows"
+		systemversion "latest"
+		cppdialect "C++20"
+
+	filter "system:linux"
+		pic "On"
+		cppdialect "C++20"
+
+	filter "configurations:Debug"
+		runtime "Debug"
+		symbols "on"
+
+	filter "configurations:Release"
+		runtime "Release"
+		optimize "on"
+
 group ""

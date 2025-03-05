@@ -66,13 +66,15 @@ project "ChessEngine"
 		"ChessEngine/vendor/GLFW/include",
 		"ChessEngine/vendor/glm",
 		"ChessEngine/vendor/stb",
+		"ChessEngine/vendor/imgui",
 		"%{VULKAN_SDK}/Include"
 	}
 
 	links
 	{
 		"GLFW",
-		"glm"
+		"glm",
+		"ImGui"
 	}
 
 	libdirs
@@ -115,6 +117,7 @@ project "HexChess"
 		"ChessEngine/src",
 		"ChessEngine/vendor/glm",
 		"ChessEngine/vendor/stb",
+		"ChessEngine/vendor/imgui",
 		"%{VULKAN_SDK}/Include"
 	}
 
