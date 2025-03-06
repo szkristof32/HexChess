@@ -25,9 +25,53 @@ namespace ChessEngine {
 			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
 
 			for (const auto& listener : window.m_SizeListeners)
-			{
 				listener((uint32_t)width, (uint32_t)height);
+		});
+		glfwSetKeyCallback(window, [](GLFWwindow* windowPtr, int key, int scancode, int action, int mods)
+		{
+			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+					for (const auto& listener : window.m_KeyPressListeners)
+						listener(key);
+					break;
+				case GLFW_RELEASE:
+					for (const auto& listener : window.m_KeyReleaseListeners)
+						listener(key);
+					break;
 			}
+		});
+		glfwSetMouseButtonCallback(window, [](GLFWwindow* windowPtr, int button, int action, int mods)
+		{
+			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
+
+			switch (action)
+			{
+				case GLFW_PRESS:
+					for (const auto& listener : window.m_ButtonPressListeners)
+						listener(button);
+					break;
+				case GLFW_RELEASE:
+					for (const auto& listener : window.m_ButtonReleaseListeners)
+						listener(button);
+					break;
+			}
+		});
+		glfwSetCursorPosCallback(window, [](GLFWwindow* windowPtr, double xPos, double yPos)
+		{
+			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
+
+			for (const auto& listener : window.m_MouseListeners)
+				listener((float)xPos, (float)yPos);
+		});
+		glfwSetScrollCallback(window, [](GLFWwindow* windowPtr, double xOffset, double yOffset)
+		{
+			Window& window = *(Window*)glfwGetWindowUserPointer(windowPtr);
+
+			for (const auto& listener : window.m_ScrollListeners)
+				listener((float)yOffset);
 		});
 
 		glfwShowWindow(window);

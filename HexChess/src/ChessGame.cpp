@@ -13,6 +13,10 @@ namespace HexChess {
 	void ChessGame::OnUpdate(float deltaInSeconds)
 	{
 		m_Board->OnUpdate();
+
+		std::cout << GetInput()->IsButtonDown(0) << " ";
+		std::cout << GetInput()->IsKeyDown('A') << " ";
+		std::cout << GetInput()->IsKeyPressed('R') << "\n";
 	}
 
 	void ChessGame::OnResize(uint32_t width, uint32_t height)

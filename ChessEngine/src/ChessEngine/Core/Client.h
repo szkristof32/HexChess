@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ChessEngine/Core/Input.h"
 #include "ChessEngine/Rendering/Renderer.h"
 
 #include <functional>
@@ -10,6 +11,7 @@ namespace ChessEngine {
 	{
 	public:
 		using GetRendererFn = std::function<std::shared_ptr<Renderer>()>;
+		using GetInputFn = std::function<std::shared_ptr<Input>()>;
 	public:
 		virtual ~Client() = default;
 
@@ -20,6 +22,7 @@ namespace ChessEngine {
 		virtual void OnResize(uint32_t width, uint32_t height) {}
 	public:
 		GetRendererFn GetRenderer;
+		GetInputFn GetInput;
 	};
 
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ChessEngine/Core/Input.h"
+
 namespace ChessEngine {
 
 	class Window;
@@ -26,6 +28,7 @@ namespace ChessEngine {
 		std::unique_ptr<Window> m_Window;
 		std::shared_ptr<Renderer> m_Renderer;
 		std::unique_ptr<ImGuiManager> m_ImGuiManager;
+		std::shared_ptr<Input> m_Input;
 
 		std::unique_ptr<Client, NoDeleteter<Client>> m_Client;
 		

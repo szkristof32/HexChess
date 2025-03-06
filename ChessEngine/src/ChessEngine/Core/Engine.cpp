@@ -14,13 +14,21 @@ namespace ChessEngine {
 		m_Window = std::make_unique<Window>(1280, 720, "HexChess");
 		m_Renderer = std::make_shared<Renderer>(m_Window->GetWindowHandle());
 		m_ImGuiManager = std::make_unique<ImGuiManager>(m_Window->GetWindowHandle(), m_Renderer->GetRendererContext(), m_Renderer->GetRendererBackend());
+		m_Input = std::make_shared<Input>();
 
 		m_Window->RegisterSizeListener(std::bind(&Engine::OnResize, this, std::placeholders::_1, std::placeholders::_2));
+		m_Window->RegisterKeyPressListener(std::bind(&Input::OnKeyPress, m_Input.get(), std::placeholders::_1));
+		m_Window->RegisterKeyReleaseListener(std::bind(&Input::OnKeyRelease, m_Input.get(), std::placeholders::_1));
+		m_Window->RegisterButtonPressListener(std::bind(&Input::OnButtonPress, m_Input.get(), std::placeholders::_1));
+		m_Window->RegisterButtonReleaseListener(std::bind(&Input::OnButtonRelease, m_Input.get(), std::placeholders::_1));
+		m_Window->RegisterMouseListener(std::bind(&Input::OnMouseMove, m_Input.get(), std::placeholders::_1, std::placeholders::_2));
+		m_Window->RegisterScrollListener(std::bind(&Input::OnScroll, m_Input.get(), std::placeholders::_1));
 
 		if (client)
 		{
 			m_Client = std::unique_ptr<Client, NoDeleteter<Client>>(client);
 			m_Client->GetRenderer = [&]() { return m_Renderer; };
+			m_Client->GetInput = [&]() { return m_Input; };
 
 			m_Client->OnInit();
 		}
@@ -57,6 +65,8 @@ namespace ChessEngine {
 
 			m_ImGuiManager->EndFrame();
 			m_Renderer->EndFrame();
+
+			m_Input->Update();
 		}
 	}
 
