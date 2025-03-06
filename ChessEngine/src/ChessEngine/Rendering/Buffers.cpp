@@ -52,14 +52,25 @@ namespace ChessEngine {
 	VertexBuffer::VertexBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
 		: m_Context(context), m_Backend(backend)
 	{
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
+		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
+
+		SetData(dataSize, data);
+	}
+
+	VertexBuffer::~VertexBuffer()
+	{
+		vkFreeMemory(m_Context->GetDevice(), m_Memory, nullptr);
+		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
+	}
+
+	void VertexBuffer::SetData(size_t dataSize, const void* data)
+	{
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 
 		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_Context->GetDevice(), &stagingBuffer);
 		BufferUtils::AllocateMemory(stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &stagingBufferMemory);
-
-		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
-		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
 
 		void* mapped;
 		vkMapMemory(m_Context->GetDevice(), stagingBufferMemory, 0, dataSize, 0, &mapped);
@@ -74,23 +85,28 @@ namespace ChessEngine {
 		vkDestroyBuffer(m_Context->GetDevice(), stagingBuffer, nullptr);
 	}
 
-	VertexBuffer::~VertexBuffer()
+	IndexBuffer::IndexBuffer(size_t indexCount, const uint32_t* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
+		: m_Context(context), m_Backend(backend)
+	{
+		BufferUtils::CreateBuffer(indexCount * sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
+		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
+
+		SetData(indexCount, data);
+	}
+
+	IndexBuffer::~IndexBuffer()
 	{
 		vkFreeMemory(m_Context->GetDevice(), m_Memory, nullptr);
 		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
 	}
 
-	IndexBuffer::IndexBuffer(size_t indexCount, const uint32_t* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
-		: m_Context(context), m_Backend(backend)
+	void IndexBuffer::SetData(size_t indexCount, const uint32_t* data)
 	{
 		VkBuffer stagingBuffer;
 		VkDeviceMemory stagingBufferMemory;
 
 		BufferUtils::CreateBuffer(indexCount * sizeof(uint32_t), VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_Context->GetDevice(), &stagingBuffer);
 		BufferUtils::AllocateMemory(stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &stagingBufferMemory);
-
-		BufferUtils::CreateBuffer(indexCount * sizeof(uint32_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
-		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
 
 		void* mapped;
 		vkMapMemory(m_Context->GetDevice(), stagingBufferMemory, 0, indexCount * sizeof(uint32_t), 0, &mapped);
@@ -103,12 +119,6 @@ namespace ChessEngine {
 
 		vkFreeMemory(m_Context->GetDevice(), stagingBufferMemory, nullptr);
 		vkDestroyBuffer(m_Context->GetDevice(), stagingBuffer, nullptr);
-	}
-
-	IndexBuffer::~IndexBuffer()
-	{
-		vkFreeMemory(m_Context->GetDevice(), m_Memory, nullptr);
-		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
 	}
 
 	UniformBuffer::UniformBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BoardGenerator.h"
+
 #include <ChessEngine/Rendering/Renderer.h>
 #include <ChessEngine/Rendering/Pipeline.h>
 #include <ChessEngine/Rendering/Buffers.h>
@@ -8,13 +10,6 @@
 #include <glm/glm.hpp>
 
 namespace HexChess {
-
-	struct BoardVertex
-	{
-		glm::vec3 Position;
-		glm::vec3 Colour;
-		glm::vec2 UvCoords;
-	};
 
 	struct BoardUniformBuffer
 	{
@@ -33,15 +28,19 @@ namespace HexChess {
 	public:
 		void OnResize(uint32_t width, uint32_t height);
 	private:
+		void GenerateBoard();
+		void RenderUI();
+	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
-		std::shared_ptr<ChessEngine::Pipeline> m_BoardPipeline;
+		std::shared_ptr<ChessEngine::Pipeline> m_Pipeline;
 
-		std::shared_ptr<ChessEngine::VertexBuffer> m_BoardVertexBuffer;
-		std::shared_ptr<ChessEngine::IndexBuffer> m_BoardIndexBuffer;
+		BoardConfig m_BoardConfig;
+		BoardGenerator m_Generator;
 
-		std::shared_ptr<ChessEngine::Image> m_TestImage;
+		std::shared_ptr<ChessEngine::VertexBuffer> m_VertexBuffer;
+		std::shared_ptr<ChessEngine::IndexBuffer> m_IndexBuffer;
 
-		std::shared_ptr<ChessEngine::UniformBuffer> m_BoardUniformBuffer;
+		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBuffer;
 		BoardUniformBuffer m_BoardUniforms;
 		uint32_t m_CurrentWidth = 1280, m_CurrentHeight = 720;
 	};

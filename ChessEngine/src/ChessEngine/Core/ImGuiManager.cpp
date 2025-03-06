@@ -76,8 +76,6 @@ namespace ChessEngine {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		ImGui::ShowDemoWindow();
 	}
 
 	void ImGuiManager::EndFrame()

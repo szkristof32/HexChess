@@ -2,10 +2,17 @@
 
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_colour;
-layout (location = 2) in vec2 in_uvCoords;
+layout (location = 2) in vec3 in_normal;
 
-layout (location = 0) out vec3 pass_colour;
-layout (location = 1) out vec2 pass_uvCoords;
+struct ShaderOutput
+{
+	vec3 Colour;
+	vec3 Normal;
+	vec3 WorldPosition;
+	vec3 CameraPosition;
+};
+
+layout (location = 0) out ShaderOutput Output;
 
 layout (set = 0) uniform Uniforms
 {
@@ -19,8 +26,10 @@ void main()
 	mat4 projectionViewMatrix = ProjectionMatrix * ViewMatrix;
 	vec4 worldPostition = ModelMatrix * vec4(in_position, 1.0);
 
-	pass_colour = in_colour;
-	pass_uvCoords = in_uvCoords;
+	Output.Colour = in_colour;
+	Output.Normal = in_normal;
+	Output.WorldPosition = worldPostition.xyz;
+	Output.CameraPosition = (inverse(ViewMatrix) * vec4(0.0, 0.0, 1.0, 1.0)).xyz;
 
 	gl_Position = projectionViewMatrix * worldPostition;
 }

@@ -22,6 +22,8 @@ namespace ChessEngine {
 		~VertexBuffer();
 
 		VkBuffer GetBuffer() const { return m_Buffer; }
+
+		void SetData(size_t dataSize, const void* data);
 	private:
 		std::shared_ptr<RendererContext> m_Context;
 		std::shared_ptr<RendererBackend> m_Backend;
@@ -37,6 +39,8 @@ namespace ChessEngine {
 		~IndexBuffer();
 
 		VkBuffer GetBuffer() const { return m_Buffer; }
+
+		void SetData(size_t indexCount, const uint32_t* data);
 	private:
 		std::shared_ptr<RendererContext> m_Context;
 		std::shared_ptr<RendererBackend> m_Backend;

@@ -2,7 +2,7 @@
 
 #include <ChessEngine/Core/Client.h>
 
-#include "Board.h"
+#include "Board/Board.h"
 
 namespace HexChess {
 
