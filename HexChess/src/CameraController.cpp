@@ -60,6 +60,15 @@ namespace HexChess {
 		ImGui::DragFloat("Vertical sensitivity", &m_VerticalSensitivity, 0.01f, 0.1f, 100.0f);
 		ImGui::DragFloat("Scroll sensitivity", &m_ScrollSensitivity, 0.01f, 0.1f, 100.0f);
 
+		if (ImGui::Button("Reset camera"))
+		{
+			m_Pitch = 60.0f;
+			m_Distance = 15.5f;
+			m_AngleAroundCenter = 0.0f;
+
+			CreateViewMatrix();
+		}
+
 		ImGui::End();
 	}
 

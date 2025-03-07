@@ -17,15 +17,35 @@ namespace HexChess {
 		m_Vertices.clear();
 		m_Indices.clear();
 
-		constexpr int32_t gridSize = 10;
-		for (int32_t i = -(gridSize / 2);i < gridSize / 2;i++)
-		{
-			for (int32_t j = -(gridSize / 2);j < gridSize / 2;j++)
-			{
-				uint32_t colourIndex = (i + j + gridSize) % 3;
+		constexpr int32_t gridSizeX = 11;
+		constexpr int32_t gridSizeY = 11;
 
-				glm::vec3 center = GetPositionForHex(i, j);
-				glm::vec3 colour = glm::vec3((float)colourIndex / 2.0f);
+		glm::vec3 offset = glm::vec3(0.0f);
+		if (m_Config.IsFlatTopped)
+		{
+			float size = m_Config.OuterSize;
+
+			float width = 2.0f * size;
+			float height = glm::sqrt(3.0f) * size;
+
+			float finalWidth = (glm::floor(gridSizeX / 2.0f) * width) + (glm::floor(gridSizeX / 2.0f) * (width - (height / 2)));
+			float finalHeight = gridSizeY * height;
+
+			offset = { finalWidth / 2.0f, 0.0f, finalHeight / 2.0f };
+		}
+
+		for (int32_t x = 0;x < gridSizeX;x++)
+		{
+			for (int32_t y = 0;y < gridSizeY;y++)
+			{
+				if (ShouldSkip(x, y))
+					continue;
+
+				uint32_t colourIndex = (x % 2) == 0 ? (y * 2 - 1) % 3 : (y * 2) % 3;
+				colourIndex = 2 - colourIndex;
+
+				glm::vec3 center = GetPositionForHex(x, y) - offset;
+				glm::vec3 colour = m_Config.Colours[colourIndex];
 
 				CreateHex(m_Config.InnerSize, m_Config.OuterSize, m_Config.Height, m_Config.IsFlatTopped, center, colour);
 			}
@@ -75,6 +95,16 @@ namespace HexChess {
 		}
 
 		return finalPosition;
+	}
+
+	bool BoardGenerator::ShouldSkip(int32_t xPosition, int32_t yPosition)
+	{
+		if (yPosition < 3)
+			return xPosition < 5 - (2 * yPosition) || xPosition > 5 + (2 * yPosition);
+		if (yPosition > 8)
+			return xPosition < 6 - (2 * (11 - yPosition)) || xPosition > 4 + (2 * (11 - yPosition));
+
+		return false;
 	}
 
 	void BoardGenerator::CreateHex(float innerRad, float outerRad, float height, bool isFlatTopped, const glm::vec3& center, const glm::vec3& colour)

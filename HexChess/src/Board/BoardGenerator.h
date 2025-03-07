@@ -16,8 +16,13 @@ namespace HexChess {
 	{
 		float InnerSize = 0.001f;
 		float OuterSize = 1.0f;
-		float Height = 1.0f;
+		float Height = 0.4f;
 		bool IsFlatTopped = false;
+		glm::vec3 Colours[3] = {
+			{ 1.00f, 0.81f, 0.62f },
+			{ 0.91f, 0.68f, 0.44f },
+			{ 0.82f, 0.55f, 0.27f }
+		};
 	};
 
 	class BoardGenerator
@@ -34,6 +39,7 @@ namespace HexChess {
 		size_t GetIndexCount() const { return m_Indices.size(); }
 	private:
 		glm::vec3 GetPositionForHex(int32_t xPosition, int32_t yPosition);
+		bool ShouldSkip(int32_t xPosition, int32_t yPosition);
 
 		void CreateHex(float innerRad, float outerRad, float height, bool isFlatTopped, const glm::vec3& center, const glm::vec3& colour);
 		void CreateFace(float innerRad, float outerRad, float heightA, float heightB, uint32_t point, const glm::vec3& center, const glm::vec3& colour, bool flatTopped = false, bool reverse = false);

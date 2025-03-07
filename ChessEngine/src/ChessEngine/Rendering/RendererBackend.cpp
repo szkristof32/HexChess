@@ -71,7 +71,7 @@ namespace ChessEngine {
 		VK_CHECK(vkBeginCommandBuffer(m_CommandBuffers[m_FrameIndex], &commandBufferBegin));
 
 		std::array<VkClearValue, 2> clearColours{};
-		clearColours[0].color = { 1.0f, 0.0f, 1.0f, 1.0f };
+		clearColours[0].color = { 0.26f, 0.26f, 0.26f, 1.0f };
 		clearColours[1].depthStencil = { 1.0f, 0 };
 
 		VkRenderPassBeginInfo renderPassBegin{};
