@@ -6,7 +6,7 @@ HexChess is a small chess game on a hexagonal board based on [CGPGrey's video](h
 
 The game is written in C++ using Microsoft's Visual Studio 2022. While it probably works on other platforms and can be compiled with other compilers, since I haven't tested it, I cannot guarantee it will work seamlessly.
 
-To build it, first obtain the code, either by downloading the sources or by cloning the repo with your git client. I recommend to do it recursively so you then don't have to worry about the submodules.
+To build it, first obtain the code, either by downloading the sources or by cloning the repo with your git client. I recommend to do it recursively so you then don't have to worry about all the submodules.
 
 ```
 git clone --recursive https://github.com/szkristof32/HexChess
@@ -18,6 +18,8 @@ Before you could build it, you have to make sure all the dependencies are presen
 
 - [GLFW](https://github.com/GLFW/GLFW) (submodule)
 - [glm](https://github.com/g-truc/glm) (submodule)
+- [stb](https://github.com/nothings/stb) (submodule)
+- [imgui](https://github.com/ocornut/imgui/tree/docking) (submodule)
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home) (you have to download and install it yourself, make sure to add the ```VULKAN_SDK``` environment variable)
 
 Once all depenedencies are installed correctly run ```Bootstrap.bat``` (or ```Bootstrap.sh``` if you are on Linux), to generate the project files. I'm using [Premake](https://premake.github.io) for this.
