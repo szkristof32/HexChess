@@ -9,6 +9,11 @@ workspace "HexChess"
 	language "C++"
 	cppdialect "C++23"
 
+	flags
+	{
+		"MultiProcessorCompile"
+	}
+
 	solution_items
 	{
 		".editorconfig",
@@ -47,8 +52,8 @@ project "ChessEngine"
 	location "%{prj.name}"
 	kind "StaticLib"
 
-	targetdir "bin/%{prj.name}"
-	objdir "bin-int/%{prj.name}"
+	targetdir "bin/%{cfg.buildcfg}/%{prj.name}"
+	objdir "bin-int/%{cfg.buildcfg}/%{prj.name}"
 
 	pchheader "pch.h"
 	pchsource "%{prj.name}/src/pch.cpp"
@@ -98,8 +103,8 @@ project "HexChess"
 	location "%{prj.name}"
 	kind "ConsoleApp"
 
-	targetdir "bin/%{prj.name}"
-	objdir "bin-int/%{prj.name}"
+	targetdir "bin/%{cfg.buildcfg}/%{prj.name}"
+	objdir "bin-int/%{cfg.buildcfg}/%{prj.name}"
 
 	files
 	{
@@ -125,6 +130,9 @@ project "HexChess"
 	{
 		"ChessEngine"
 	}
+
+	filter "configurations:Release"
+		kind "WindowedApp"
 
 	filter "files:**.vert or files:**.frag"
 		buildcommands

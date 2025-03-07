@@ -8,8 +8,8 @@ project "GLFW"
 	staticruntime "off"
 	warnings "off"
 
-	targetdir ("bin/%{prj.name}")
-	objdir ("bin-int/%{prj.name}")
+	targetdir ("bin/%{cfg.buildcfg}/%{prj.name}")
+	objdir ("bin-int/%{cfg.buildcfg}/%{prj.name}")
 
 	files
 	{
@@ -109,8 +109,8 @@ project "glm"
 	language "C++"
 	cppdialect "C++20"
 	
-	targetdir ("bin/%{prj.name}")
-	objdir ("bin-int/%{prj.name}")
+	targetdir ("bin/%{cfg.buildcfg}/%{prj.name}")
+	objdir ("bin-int/%{cfg.buildcfg}/%{prj.name}")
 	
 	files
 	{
@@ -131,8 +131,8 @@ project "ImGui"
 	language "C++"
     staticruntime "off"
 
-	targetdir ("bin/%{prj.name}")
-	objdir ("bin-int/%{prj.name}")
+	targetdir ("bin/%{cfg.buildcfg}/%{prj.name}")
+	objdir ("bin-int/%{cfg.buildcfg}/%{prj.name}")
 
 	files
 	{
