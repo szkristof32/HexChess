@@ -24,9 +24,7 @@ namespace HexChess {
 		Board(const std::shared_ptr<ChessEngine::Renderer>& renderer);
 		~Board();
 
-		void OnUpdate();
-	public:
-		void OnResize(uint32_t width, uint32_t height);
+		void OnUpdate(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
 	private:
 		void GenerateBoard();
 		void RenderUI();
@@ -42,7 +40,9 @@ namespace HexChess {
 
 		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBuffer;
 		BoardUniformBuffer m_BoardUniforms;
-		uint32_t m_CurrentWidth = 1280, m_CurrentHeight = 720;
+
+		glm::mat4 m_CachedProjectionMatrix;
+		glm::mat4 m_CachedViewMatrix;
 	};
 
 }

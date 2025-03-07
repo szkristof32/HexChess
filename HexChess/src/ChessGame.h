@@ -3,6 +3,7 @@
 #include <ChessEngine/Core/Client.h>
 
 #include "Board/Board.h"
+#include "CameraController.h"
 
 namespace HexChess {
 
@@ -16,6 +17,7 @@ namespace HexChess {
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 
+		std::unique_ptr<CameraController> m_CameraController;
 		std::unique_ptr<Board> m_Board;
 	};
 

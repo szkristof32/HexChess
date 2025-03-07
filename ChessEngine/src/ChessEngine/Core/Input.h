@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ChessEngine/Core/Keys.h"
+
 namespace ChessEngine {
 
 	class Input

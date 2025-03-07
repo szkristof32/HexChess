@@ -28,8 +28,8 @@ namespace HexChess {
 		m_BoardConfig.IsFlatTopped = true;
 		GenerateBoard();
 
-		m_BoardUniforms.ProjectionMatrix = glm::perspectiveFov(glm::radians(70.0f), 1280.0f, 720.0f, 0.01f, 100.0f);
-		m_BoardUniforms.ViewMatrix = glm::lookAt(glm::vec3(0.0f, 5.0f, 5.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		m_BoardUniforms.ProjectionMatrix = glm::mat4(1.0f);
+		m_BoardUniforms.ViewMatrix = glm::mat4(1.0f);
 		m_BoardUniforms.ModelMatrix = glm::mat4(1.0f);
 
 		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_BoardUniforms), &m_BoardUniforms);
@@ -40,8 +40,18 @@ namespace HexChess {
 	{
 	}
 
-	void Board::OnUpdate()
+	void Board::OnUpdate(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
 	{
+		if (projectionMatrix != m_CachedProjectionMatrix || viewMatrix != m_CachedViewMatrix)
+		{
+			m_CachedProjectionMatrix = projectionMatrix;
+			m_CachedViewMatrix = viewMatrix;
+
+			m_BoardUniforms.ProjectionMatrix = m_CachedProjectionMatrix;
+			m_BoardUniforms.ViewMatrix = m_CachedViewMatrix;
+			m_UniformBuffer->SetData(sizeof(m_BoardUniforms), &m_BoardUniforms);
+		}
+
 		m_Renderer->BindPipeline(m_Pipeline);
 		m_Renderer->BindVertexBuffer(m_VertexBuffer);
 		m_Renderer->BindIndexBuffer(m_IndexBuffer);
@@ -49,14 +59,6 @@ namespace HexChess {
 		m_Renderer->DrawIndexed((uint32_t)m_Generator.GetIndexCount());
 
 		RenderUI();
-	}
-
-	void Board::OnResize(uint32_t width, uint32_t height)
-	{
-		if (width == m_CurrentWidth && height == m_CurrentHeight)
-			return;
-
-		m_BoardUniforms.ProjectionMatrix = glm::perspectiveFov(glm::radians(70.0f), (float)width, (float)height, 0.01f, 100.0f);
 	}
 
 	void Board::GenerateBoard()

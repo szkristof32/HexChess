@@ -7,21 +7,20 @@ namespace HexChess {
 	{
 		m_Renderer = GetRenderer();
 
+		m_CameraController = std::make_unique<CameraController>(GetInput());
 		m_Board = std::make_unique<Board>(m_Renderer);
 	}
 
 	void ChessGame::OnUpdate(float deltaInSeconds)
 	{
-		m_Board->OnUpdate();
+		m_CameraController->Update(deltaInSeconds);
 
-		std::cout << GetInput()->IsButtonDown(0) << " ";
-		std::cout << GetInput()->IsKeyDown('A') << " ";
-		std::cout << GetInput()->IsKeyPressed('R') << "\n";
+		m_Board->OnUpdate(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
 	}
 
 	void ChessGame::OnResize(uint32_t width, uint32_t height)
 	{
-		m_Board->OnResize(width, height);
+		m_CameraController->OnResize(width, height);
 	}
 
 }
