@@ -16,7 +16,9 @@ namespace ChessEngine {
 		Window(uint32_t width, uint32_t height, std::string_view title);
 		~Window();
 
+		void OnInit() const;
 		void Update() const;
+
 		void RegisterSizeListener(const SizeListener& listener) { m_SizeListeners.emplace_back(listener); }
 		void RegisterKeyPressListener(const KeyListener& listener) { m_KeyPressListeners.emplace_back(listener); }
 		void RegisterKeyReleaseListener(const KeyListener& listener) { m_KeyReleaseListeners.emplace_back(listener); }

@@ -8,9 +8,12 @@ namespace HexChess {
 		m_Renderer = GetRenderer();
 		m_ModelRepository = std::make_unique<ModelRepository>(m_Renderer);
 
-		m_CameraController = std::make_unique<CameraController>(GetInput());
 		m_Board = std::make_unique<Board>(m_Renderer);
+
+		m_BoardRenderer = std::make_unique<BoardRenderer>(m_Renderer);
 		m_PieceRenderer = std::make_unique<PieceRenderer>(m_Renderer);
+		
+		m_CameraController = std::make_unique<CameraController>(GetInput());
 	}
 
 	void ChessGame::OnUpdate(float deltaInSeconds)
@@ -19,7 +22,11 @@ namespace HexChess {
 
 		m_CameraController->Update(deltaInSeconds);
 
-		m_Board->OnUpdate(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
+		m_Board->OnUpdate();
+
+		m_BoardRenderer->BeginFrame(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
+		m_BoardRenderer->RenderBoard(*m_Board);
+		m_BoardRenderer->EndFrame();
 
 		m_PieceRenderer->BeginFrame(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
 		m_PieceRenderer->RenderPiece(testPiece);

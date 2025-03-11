@@ -34,7 +34,7 @@ namespace HexChess {
 		glm::vec3 m_Center;
 		glm::vec3 m_Position;
 
-		uint32_t m_CurrentWidth = 1280, m_CurrentHeight = 720;
+		uint32_t m_CurrentWidth = 0, m_CurrentHeight = 0;
 		glm::mat4 m_ProjectionMatrix;
 		glm::mat4 m_ViewMatrix;
 

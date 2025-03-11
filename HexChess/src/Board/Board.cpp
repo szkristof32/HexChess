@@ -7,57 +7,20 @@
 
 namespace HexChess {
 
-	using ChessEngine::ShaderStage;
-	using ChessEngine::ShaderResourceType;
-	using ChessEngine::VertexDataType;
 
 	Board::Board(const std::shared_ptr<ChessEngine::Renderer>& renderer)
 		: m_Renderer(renderer), m_Generator(m_BoardConfig)
 	{
-		ChessEngine::PipelineSpecification boardPipelineSpec{};
-		boardPipelineSpec.ShaderBinaries[ShaderStage::Vertex] = "Resources/Shaders/BoardShader.vert.spv";
-		boardPipelineSpec.ShaderBinaries[ShaderStage::Fragment] = "Resources/Shaders/BoardShader.frag.spv";
-		boardPipelineSpec.VertexInput = {
-			VertexDataType::Float3,
-			VertexDataType::Float3,
-			VertexDataType::Float3
-		};
-
-		m_Pipeline = m_Renderer->CreatePipeline(boardPipelineSpec);
-
 		m_BoardConfig.IsFlatTopped = true;
 		GenerateBoard();
-
-		m_BoardUniforms.ProjectionMatrix = glm::mat4(1.0f);
-		m_BoardUniforms.ViewMatrix = glm::mat4(1.0f);
-		m_BoardUniforms.ModelMatrix = glm::mat4(1.0f);
-
-		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_BoardUniforms), &m_BoardUniforms);
-		m_Pipeline->WriteDescriptor("Uniforms", m_UniformBuffer);
 	}
 
 	Board::~Board()
 	{
 	}
 
-	void Board::OnUpdate(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix)
+	void Board::OnUpdate()
 	{
-		if (projectionMatrix != m_CachedProjectionMatrix || viewMatrix != m_CachedViewMatrix)
-		{
-			m_CachedProjectionMatrix = projectionMatrix;
-			m_CachedViewMatrix = viewMatrix;
-
-			m_BoardUniforms.ProjectionMatrix = m_CachedProjectionMatrix;
-			m_BoardUniforms.ViewMatrix = m_CachedViewMatrix;
-			m_UniformBuffer->SetData(sizeof(m_BoardUniforms), &m_BoardUniforms);
-		}
-
-		m_Renderer->BindPipeline(m_Pipeline);
-		m_Renderer->BindVertexBuffer(m_VertexBuffer);
-		m_Renderer->BindIndexBuffer(m_IndexBuffer);
-
-		m_Renderer->DrawIndexed((uint32_t)m_Generator.GetIndexCount());
-
 		RenderUI();
 	}
 
@@ -65,15 +28,17 @@ namespace HexChess {
 	{
 		m_Generator.GenerateBoard();
 
-		if (!m_VertexBuffer)
-			m_VertexBuffer = m_Renderer->CreateVertexBuffer(m_Generator.GetVertexCount() * sizeof(BoardVertex), m_Generator.GetVertices().data());
+		if (!m_Model.VertexBuffer)
+			m_Model.VertexBuffer = m_Renderer->CreateVertexBuffer(m_Generator.GetVertexCount() * sizeof(BoardVertex), m_Generator.GetVertices().data());
 		else
-			m_VertexBuffer->SetData(m_Generator.GetVertexCount() * sizeof(BoardVertex), m_Generator.GetVertices().data());
+			m_Model.VertexBuffer->SetData(m_Generator.GetVertexCount() * sizeof(BoardVertex), m_Generator.GetVertices().data());
 
-		if (!m_IndexBuffer)
-			m_IndexBuffer = m_Renderer->CreateIndexBuffer(m_Generator.GetIndexCount(), m_Generator.GetIndices().data());
+		if (!m_Model.IndexBuffer)
+			m_Model.IndexBuffer = m_Renderer->CreateIndexBuffer(m_Generator.GetIndexCount(), m_Generator.GetIndices().data());
 		else
-			m_IndexBuffer->SetData(m_Generator.GetIndexCount(), m_Generator.GetIndices().data());
+			m_Model.IndexBuffer->SetData(m_Generator.GetIndexCount(), m_Generator.GetIndices().data());
+
+		m_Model.IndexCount = (uint32_t)m_Generator.GetIndexCount();
 	}
 
 	void Board::RenderUI()

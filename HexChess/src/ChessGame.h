@@ -5,6 +5,9 @@
 #include "Loading/ModelRepository.h"
 
 #include "Board/Board.h"
+#include "Board/Piece.h"
+
+#include "Board/BoardRenderer.h"
 #include "Board/PieceRenderer.h"
 
 #include "CameraController.h"
@@ -22,9 +25,12 @@ namespace HexChess {
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 		std::unique_ptr<ModelRepository> m_ModelRepository;
 
-		std::unique_ptr<CameraController> m_CameraController;
 		std::unique_ptr<Board> m_Board;
+		
+		std::unique_ptr<BoardRenderer> m_BoardRenderer;
 		std::unique_ptr<PieceRenderer> m_PieceRenderer;
+		
+		std::unique_ptr<CameraController> m_CameraController;
 	};
 
 }

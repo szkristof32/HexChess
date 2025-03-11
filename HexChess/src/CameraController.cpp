@@ -74,6 +74,9 @@ namespace HexChess {
 
 	void CameraController::CreateProjectionMatrix()
 	{
+		if (m_CurrentWidth == 0 || m_CurrentHeight == 0)
+			return;
+
 		m_ProjectionMatrix = glm::perspectiveFov(glm::radians(70.0f), (float)m_CurrentWidth, (float)m_CurrentHeight, 0.1f, 100.0f);
 	}
 

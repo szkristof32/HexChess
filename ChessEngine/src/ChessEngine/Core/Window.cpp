@@ -84,6 +84,15 @@ namespace ChessEngine {
 		glfwTerminate();
 	}
 
+	void Window::OnInit() const
+	{
+		int width, height;
+		glfwGetFramebufferSize(m_WindowHandle, &width, &height);
+
+		for (const auto& listener : m_SizeListeners)
+			listener((uint32_t)width, (uint32_t)height);
+	}
+
 	void Window::Update() const
 	{
 		glfwPollEvents();

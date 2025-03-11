@@ -33,6 +33,8 @@ namespace ChessEngine {
 			m_Client->OnInit();
 		}
 
+		m_Window->OnInit();
+
 		m_Running = true;
 	}
 
