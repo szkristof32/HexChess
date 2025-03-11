@@ -27,6 +27,8 @@ workspace "HexChess"
 		"Release"
 	}
 
+	defines "_CRT_SECURE_NO_WARNINGS"
+
 	filter "action:vs*"
 		linkoptions { "/ignore:4099" }
         disablewarnings { "4068" }
@@ -118,6 +120,7 @@ project "HexChess"
 	includedirs
 	{
 		"%{prj.name}/src",
+		"%{prj.name}/vendor/assimp/include",
 
 		"ChessEngine/src",
 		"ChessEngine/vendor/glm",
@@ -128,8 +131,12 @@ project "HexChess"
 
 	links
 	{
-		"ChessEngine"
+		"ChessEngine",
+		"assimp"
 	}
+
+	filter "action:vs*"
+		disablewarnings "4244"
 
 	filter "configurations:Release"
 		kind "WindowedApp"

@@ -1,3 +1,8 @@
+function file_exists(name)
+   local f=io.open(name,"r")
+   if f~=nil then io.close(f) return true else return false end
+end
+
 group "Dependencies"
 
 project "GLFW"
@@ -164,5 +169,140 @@ project "ImGui"
 	filter "configurations:Release"
 		runtime "Release"
 		optimize "on"
+
+project "assimp"
+	location "HexChess/vendor/assimp"
+
+	kind "SharedLib"
+	language "C++"
+	cppdialect "C++17"
+
+	targetdir ("bin/%{cfg.buildcfg}/%{prj.name}")
+	objdir ("bin-int/%{cfg.buildcfg}/%{prj.name}")
+
+	files
+	{
+		"HexChess/vendor/assimp/code/**.cpp",
+		"HexChess/vendor/assimp/code/**.c",
+		"HexChess/vendor/assimp/code/**.h",
+
+		"HexChess/vendor/assimp/contrib/zlib/*.c",
+		"HexChess/vendor/assimp/contrib/zlib/*.h",
+		"HexChess/vendor/assimp/contrib/zip/src/**.c",
+		"HexChess/vendor/assimp/contrib/zip/src/**.h",
+		"HexChess/vendor/assimp/contrib/poly2tri/**.cc",
+		"HexChess/vendor/assimp/contrib/poly2tri/**.h",
+		"HexChess/vendor/assimp/contrib/clipper/**.cpp",
+		"HexChess/vendor/assimp/contrib/clipper/**.h",
+		"HexChess/vendor/assimp/contrib/Open3DGC/**.cpp",
+		"HexChess/vendor/assimp/contrib/Open3DGC/**.inl",
+		"HexChess/vendor/assimp/contrib/Open3DGC/**.h",
+		"HexChess/vendor/assimp/contrib/openddlparser/**.cpp",
+		"HexChess/vendor/assimp/contrib/openddlparser/**.h",
+		"HexChess/vendor/assimp/contrib/pugixml/src/**.hpp",
+		"HexChess/vendor/assimp/contrib/unzip/**.c",
+		"HexChess/vendor/assimp/contrib/unzip/**.h",
+	}
+
+	removefiles
+	{
+		"HexChess/vendor/assimp/code/AssetLib/IFC/IFCReaderGen_4.cpp",
+		"HexChess/vendor/assimp/code/AssetLib/IFC/IFCReaderGen_4.h",
+	}
+
+	includedirs
+	{
+		"HexChess/vendor/assimp",
+		"HexChess/vendor/assimp/code",
+		"HexChess/vendor/assimp/code/include",
+		"HexChess/vendor/assimp/include",
+
+		"HexChess/vendor/assimp/contrib",
+		"HexChess/vendor/assimp/contrib/pugixml/src",
+		"HexChess/vendor/assimp/contrib/utf8cpp/source",
+		"HexChess/vendor/assimp/contrib/rapidjson/include",
+		"HexChess/vendor/assimp/contrib/unzip",
+		"HexChess/vendor/assimp/contrib/openddlparser/include",
+		"HexChess/vendor/assimp/contrib/zlib",
+	}
+
+	defines
+	{
+		"ASSIMP_BUILD_DLL_EXPORT",
+		"ASSIMP_BUILD_NO_M3D_IMPORTER",
+		"ASSIMP_BUILD_NO_M3D_EXPORTER",
+		"ASSIMP_BUILD_NO_VRML_IMPORTER",
+		"ASSIMP_BUILD_NO_C4D_IMPORTER",
+		"ASSIMP_BUILD_NO_USD_IMPORTER",
+		"MINIZ_USE_UNALIGNED_LOADS_AND_STORES=0",
+		"ASSIMP_IMPORTER_GLTF_USE_OPEN3DGC=1",
+		"RAPIDJSON_HAS_STDSTRING=1",
+		"RAPIDJSON_NOMEMBERITERATORCLASS",
+		"OPENDDLPARSER_BUILD",
+		"assimp_EXPORTS"
+	}
+
+	defines
+	{
+		"_CRT_SECURE_NO_DEPRECATE",
+		"_CRT_NONSTDC_NO_DEPRECATE"
+	}
+
+	filter "action:vs*"
+        disablewarnings
+		{
+			"4127",
+			"4131",
+			"4244"
+		}
+
+	postbuildcommands
+	{
+		"{MKDIR} %{wks.location}/bin/%{cfg.buildcfg}/HexChess",
+		"{COPYFILE} %{cfg.buildtarget.relpath} %{wks.location}/bin/%{cfg.buildcfg}/HexChess/%{cfg.buildtarget.name}"
+	}
+
+	newaction {
+		trigger = "assimp",
+		description = "assimp generation",
+		execute = function()
+			if not file_exists("HexChess/vendor/assimp/include/assimp/config.h") then
+				local file = io.open("HexChess/vendor/assimp/include/assimp/config.h", "w+")
+				for line in io.lines("HexChess/vendor/assimp/include/assimp/config.h.in") do
+					line = line:gsub("(#cmakedefine).+", "")
+					file:write(line .. "\n")
+				end
+			end
+
+			if not file_exists("HexChess/vendor/assimp/include/assimp/revision.h") then
+				local file = io.open("HexChess/vendor/assimp/include/assimp/revision.h", "w+")
+				local handle = io.popen("git rev-parse --abbrev-ref HEAD")
+				local gitBranch = handle:read()
+				handle:close()
+				local handle = io.popen("git rev-parse --short=8 HEAD")
+				local gitCommitHash = handle:read()
+				handle:close()
+				for line in io.lines("HexChess/vendor/assimp/include/assimp/revision.h.in") do
+					line = line:gsub("@CMAKE_SHARED_LIBRARY_PREFIX@", "")
+					line = line:gsub("@LIBRARY_SUFFIX@", "")
+					line = line:gsub("@CMAKE_DEBUG_POSTFIX@", "")
+					line = line:gsub("@ASSIMP_VERSION_MAJOR@", "5") -- Maybe can be read from the cmake file
+					line = line:gsub("@ASSIMP_VERSION_MINOR@", "4")
+					line = line:gsub("@ASSIMP_VERSION_PATCH@", "3")
+					line = line:gsub("@ASSIMP_PACKAGE_VERSION@", "0")
+					line = line:gsub("@GIT_BRANCH@", gitBranch)
+					line = line:gsub("@GIT_COMMIT_HASH@", gitCommitHash)
+					file:write(line .. "\n")
+				end
+			end
+
+			if not file_exists("HexChess/vendor/assimp/contrib/zlib/zconf.h") then
+				local file = io.open("HexChess/vendor/assimp/contrib/zlib/zconf.h", "w+")
+				for line in io.lines("HexChess/vendor/assimp/contrib/zlib/zconf.h.in") do
+					file:write(line .. "\n")
+				end
+			end
+		end
+	}
 
 group ""
