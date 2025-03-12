@@ -30,9 +30,17 @@ namespace HexChess {
 
 		const Model& GetModel() const { return m_Model; }
 		PieceType GetPieceType() const { return m_Type; }
+
+		uint32_t GetFile() const { return m_File; }
+		void SetFile(uint32_t file) { m_File = file; }
+		uint32_t GetRank() const { return m_Rank; }
+		void SetRank(uint32_t rank) { m_Rank = rank; }
 	private:
 		PieceType m_Type;
 		Model m_Model;
+
+		uint32_t m_File = 0;
+		uint32_t m_Rank = 0;
 	};
 
 }

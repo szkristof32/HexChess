@@ -66,8 +66,9 @@ namespace HexChess {
 	{
 	}
 
-	void PieceRenderer::RenderPiece(const Piece& piece)
+	void PieceRenderer::RenderPiece(const Piece& piece, const glm::vec3& position)
 	{
+		m_PiecePushConstant.ModelMatrix = glm::translate(glm::mat4(1.0f), position) * m_ScaleMatrix;
 		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(piece.GetPieceType());
 		m_Pipeline->PushConstants("PieceConstants", sizeof(m_PiecePushConstant), &m_PiecePushConstant);
 

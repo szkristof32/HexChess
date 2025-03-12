@@ -12,7 +12,12 @@ namespace HexChess {
 	{
 		glm::mat4 ProjectionMatrix;
 		glm::mat4 ViewMatrix;
+	};
+
+	struct PiecePushConstant
+	{
 		glm::mat4 ModelMatrix;
+		glm::vec3 Colour;
 	};
 
 	class PieceRenderer
@@ -24,7 +29,7 @@ namespace HexChess {
 		void BeginFrame(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
 		void EndFrame();
 		
-		void RenderPiece(const Piece& piece);
+		void RenderPiece(const Piece& piece, const glm::vec3& position = glm::vec3(0.0f));
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 
@@ -32,9 +37,11 @@ namespace HexChess {
 		
 		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBuffer;
 		PieceUniformBuffer m_PieceUniforms;
+		PiecePushConstant m_PiecePushConstant;
 
 		glm::mat4 m_CachedProjectionMatrix;
 		glm::mat4 m_CachedViewMatrix;
+		glm::mat4 m_ScaleMatrix;
 	};
 
 }

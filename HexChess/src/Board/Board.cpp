@@ -7,12 +7,38 @@
 
 namespace HexChess {
 
+	namespace PieceUtils {
 
-	Board::Board(const std::shared_ptr<ChessEngine::Renderer>& renderer)
-		: m_Renderer(renderer), m_Generator(m_BoardConfig)
+		static PieceType GetPieceColour(char piece)
+		{
+			return piece >= 'a' && piece <= 'z' ? PieceType::Black : PieceType::White;
+		}
+
+		static PieceType GetPieceType(char piece)
+		{
+			piece = piece >= 'a' && piece <= 'z' ? piece - 'a' + 'A' : piece;
+
+			switch (piece)
+			{
+				case 'P':	return PieceType::Pawn;
+				case 'B':	return PieceType::Bishop;
+				case 'N':	return PieceType::Knight;
+				case 'R':	return PieceType::Rook;
+				case 'Q':	return PieceType::Queen;
+				case 'K':	return PieceType::King;
+			}
+
+			return PieceType::None;
+		}
+
+	}
+
+	Board::Board(const std::shared_ptr<ChessEngine::Renderer>& renderer, const std::shared_ptr<ModelRepository>& modelRepository)
+		: m_Renderer(renderer), m_Generator(m_BoardConfig), m_ModelRepository(modelRepository)
 	{
 		m_BoardConfig.IsFlatTopped = true;
 		GenerateBoard();
+		GeneratePieces();
 	}
 
 	Board::~Board()
@@ -39,6 +65,44 @@ namespace HexChess {
 			m_Model.IndexBuffer->SetData(m_Generator.GetIndexCount(), m_Generator.GetIndices().data());
 
 		m_Model.IndexCount = (uint32_t)m_Generator.GetIndexCount();
+	}
+
+	void Board::GeneratePieces(std::string_view fen)
+	{
+		const char* fenData = fen.data();
+
+		uint32_t file = 0;
+		uint32_t rank = 10;
+
+		for (size_t i = 0;i < fen.size();i++)
+		{
+			char position = fenData[i];
+
+			if (position == '/')
+			{
+				file = 0;
+				rank--;
+				continue;
+			}
+			if (position >= '0' && position <= '9')
+			{
+				uint32_t skip = (uint32_t)(position - '0');
+				file += skip;
+				continue;
+			}
+			if (position < 'A' || (position > 'Z' && position < 'a') || position > 'z')
+			{
+				continue;
+			}
+
+			PieceType pieceType = PieceUtils::GetPieceColour(position) | PieceUtils::GetPieceType(position);
+
+			Piece& piece = m_Pieces.emplace_back(pieceType, *m_ModelRepository);
+			piece.SetFile(file);
+			piece.SetRank(rank);
+
+			file++;
+		}
 	}
 
 	void Board::RenderUI()
