@@ -29,6 +29,7 @@ namespace HexChess {
 		~Piece();
 
 		const Model& GetModel() const { return m_Model; }
+		PieceType GetPieceType() const { return m_Type; }
 	private:
 		PieceType m_Type;
 		Model m_Model;

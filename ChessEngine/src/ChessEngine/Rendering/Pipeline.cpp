@@ -140,6 +140,22 @@ namespace ChessEngine {
 		vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &descriptorWrite, 0, nullptr);
 	}
 
+	void Pipeline::PushConstants(std::string_view name, size_t dataSize, const void* data)
+	{
+		for (const auto& pushConstant : m_ReflectionData.PushConstants)
+		{
+			if (pushConstant.Name == name && pushConstant.Size == dataSize)
+			{
+				m_Backend->PushConstants(m_PipelineLayout,
+					PipelineUtils::ShaderStageToVkStage(pushConstant.Stage),
+					pushConstant.Offset,
+					pushConstant.Size,
+					data);
+				return;
+			}
+		}
+	}
+
 	void Pipeline::Create()
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
@@ -253,10 +269,21 @@ namespace ChessEngine {
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 
+		std::vector<VkPushConstantRange> pushConstants;
+		pushConstants.reserve(m_ReflectionData.PushConstants.size());
+		
+		for (const auto& pushConstant : m_ReflectionData.PushConstants)
+		{
+			VkPushConstantRange& range = pushConstants.emplace_back();
+			range.offset = (uint32_t)pushConstant.Offset;
+			range.size = (uint32_t)pushConstant.Size;
+			range.stageFlags = PipelineUtils::ShaderStageToVkStage(pushConstant.Stage);
+		}
+
 		VkPipelineLayoutCreateInfo layoutInfo{};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.pushConstantRangeCount = 0;
-		layoutInfo.pPushConstantRanges = nullptr;
+		layoutInfo.pushConstantRangeCount = (uint32_t)pushConstants.size();
+		layoutInfo.pPushConstantRanges = pushConstants.data();
 		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorSetLayouts.size();
 		layoutInfo.pSetLayouts = m_DescriptorSetLayouts.data();
 
@@ -288,9 +315,9 @@ namespace ChessEngine {
 
 	void Pipeline::CreateDescriptorSetLayout()
 	{
-		m_DescriptorSetLayouts.reserve(m_ReflectionData.size());
+		m_DescriptorSetLayouts.reserve(m_ReflectionData.DescriptorSets.size());
 
-		for (const auto& [index, descriptorSet] : m_ReflectionData)
+		for (const auto& [index, descriptorSet] : m_ReflectionData.DescriptorSets)
 		{
 			std::vector<VkDescriptorSetLayoutBinding> bindings;
 			bindings.reserve(descriptorSet.Resources.size());
@@ -321,7 +348,7 @@ namespace ChessEngine {
 		std::vector<VkDescriptorPoolSize> poolSizes;
 		poolSizes.reserve(m_DescriptorCount);
 
-		for (const auto& [index, descriptorSet] : m_ReflectionData)
+		for (const auto& [index, descriptorSet] : m_ReflectionData.DescriptorSets)
 		{
 			for (const auto& resource : descriptorSet.Resources)
 			{
@@ -355,7 +382,7 @@ namespace ChessEngine {
 
 	ShaderResource Pipeline::FindShaderResource(std::string_view name, ShaderResourceType type)
 	{
-		for (const auto& [index, descriptorSet] : m_ReflectionData)
+		for (const auto& [index, descriptorSet] : m_ReflectionData.DescriptorSets)
 		{
 			for (const auto& resource : descriptorSet.Resources)
 			{

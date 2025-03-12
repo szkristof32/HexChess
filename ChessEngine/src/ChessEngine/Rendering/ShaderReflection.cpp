@@ -5,11 +5,27 @@
 
 namespace ChessEngine {
 
-	void ReflectShaderStage(const std::vector<uint32_t>& code, ShaderStage stage, std::unordered_map<uint32_t, DescriptorSet>& reflectionData)
+	void ReflectShaderStage(const std::vector<uint32_t>& code, ShaderStage stage, ShaderReflection& reflectionData)
 	{
 		spirv_cross::Compiler compiler(code);
 		auto resources = compiler.get_shader_resources();
 
+		for (const auto& resource : resources.push_constant_buffers)
+		{
+			const auto& name = resource.name;
+			auto& bufferType = compiler.get_type(resource.base_type_id);
+			auto bufferSize = (size_t)compiler.get_declared_struct_size(bufferType);
+			uint32_t memberCount = uint32_t(bufferType.member_types.size());
+			size_t bufferOffset = 0;
+			if (reflectionData.PushConstants.size())
+				bufferOffset = reflectionData.PushConstants.back().Offset + reflectionData.PushConstants.back().Size;
+
+			PushConstantRange& pushConstant = reflectionData.PushConstants.emplace_back();
+			pushConstant.Name = name;
+			pushConstant.Offset = bufferOffset;
+			pushConstant.Size = bufferSize;
+			pushConstant.Stage = stage;
+		}
 		for (const auto& resource : resources.uniform_buffers)
 		{
 			auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
@@ -23,7 +39,7 @@ namespace ChessEngine {
 			uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
 			auto size = (uint32_t)compiler.get_declared_struct_size(bufferType);
 
-			DescriptorSet& shaderDescriptorSet = reflectionData[descriptorSet];
+			DescriptorSet& shaderDescriptorSet = reflectionData.DescriptorSets[descriptorSet];
 
 			ShaderResource& uniformBuffer = shaderDescriptorSet.Resources.emplace_back();
 			uniformBuffer.Type = ShaderResourceType::Uniform;
@@ -46,7 +62,7 @@ namespace ChessEngine {
 			if (arraySize == 0)
 				arraySize = 1;
 
-			DescriptorSet& shaderDescriptorSet = reflectionData[descriptorSet];
+			DescriptorSet& shaderDescriptorSet = reflectionData.DescriptorSets[descriptorSet];
 
 			ShaderResource& imageSampler = shaderDescriptorSet.Resources.emplace_back();
 			imageSampler.Type = ShaderResourceType::Sampler;

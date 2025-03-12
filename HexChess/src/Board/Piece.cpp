@@ -17,20 +17,12 @@ namespace HexChess {
 			return "";
 		}
 
-		static glm::vec3 PieceTypeColour(PieceType type)
-		{
-			if (type & PieceType::White)	return glm::vec3(0.95f);
-			if (type & PieceType::Black)	return glm::vec3(0.15f);
-
-			return { 1.0f, 0.0f, 1.0f };
-		}
-
 	}
 
 	Piece::Piece(PieceType type, ModelRepository& modelRepo)
 		: m_Type(type)
 	{
-		m_Model = modelRepo.GetModel(PieceUtils::PieceTypeModelPath(m_Type), PieceUtils::PieceTypeColour(m_Type));
+		m_Model = modelRepo.GetModel(PieceUtils::PieceTypeModelPath(m_Type));
 	}
 
 	Piece::~Piece()

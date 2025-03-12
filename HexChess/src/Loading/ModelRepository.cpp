@@ -12,10 +12,10 @@ namespace HexChess {
 	{
 	}
 
-	const Model& ModelRepository::GetModel(const std::filesystem::path& path, const glm::vec3& colour)
+	const Model& ModelRepository::GetModel(const std::filesystem::path& path)
 	{
 		if (!m_Models.contains(path))
-			m_Models[path] = m_Loader.LoadModel(path, colour);
+			m_Models[path] = m_Loader.LoadModel(path);
 
 		return m_Models.at(path);
 	}

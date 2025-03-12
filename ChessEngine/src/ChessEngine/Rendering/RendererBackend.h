@@ -27,6 +27,7 @@ namespace ChessEngine {
 
 		void Draw(uint32_t vertexCount) const;
 		void DrawIndexed(uint32_t indexCount) const;
+		void PushConstants(VkPipelineLayout layout, VkPipelineStageFlags stage, size_t offset, size_t dataSize, const void* data);
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
 		VkCommandBuffer GetCurrentCommandBuffer() const { return m_CommandBuffers[m_FrameIndex]; }

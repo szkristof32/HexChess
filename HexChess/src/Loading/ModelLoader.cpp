@@ -15,11 +15,10 @@ namespace HexChess {
 	{
 	}
 
-	Model ModelLoader::LoadModel(const std::filesystem::path& filepath, const glm::vec3& colour)
+	Model ModelLoader::LoadModel(const std::filesystem::path& filepath)
 	{
 		m_Vertices.clear();
 		m_Indices.clear();
-		m_Colour = colour;
 
 		const auto& path = filepath.string();
 		const aiScene* scene = m_Importer.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
@@ -65,7 +64,6 @@ namespace HexChess {
 				mesh->mVertices[i].y,
 				mesh->mVertices[i].z
 			};
-			vertex.Colour = m_Colour;
 			vertex.Normal = {
 				mesh->mNormals[i].x,
 				mesh->mNormals[i].y,

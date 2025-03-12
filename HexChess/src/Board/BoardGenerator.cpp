@@ -28,8 +28,8 @@ namespace HexChess {
 			float width = 2.0f * size;
 			float height = glm::sqrt(3.0f) * size;
 
-			float finalWidth = (glm::floor(gridSizeX / 2.0f) * width) + (glm::floor(gridSizeX / 2.0f) * (width - (height / 2)));
-			float finalHeight = gridSizeY * height;
+			float finalWidth = (gridSizeX / 2 * width) + (gridSizeX / 2 * (width / 2));
+			float finalHeight = (gridSizeY * height) - height;
 
 			offset = { finalWidth / 2.0f, 0.0f, finalHeight / 2.0f };
 		}

@@ -8,6 +8,18 @@ namespace HexChess {
 	using ChessEngine::ShaderStage;
 	using ChessEngine::VertexDataType;
 
+	namespace PieceUtils {
+
+		static glm::vec3 PieceTypeColour(PieceType type)
+		{
+			if (type & PieceType::White)	return glm::vec3(0.95f);
+			if (type & PieceType::Black)	return glm::vec3(0.15f);
+
+			return { 1.0f, 0.0f, 1.0f };
+		}
+
+	}
+
 	PieceRenderer::PieceRenderer(const std::shared_ptr<ChessEngine::Renderer>& renderer)
 		: m_Renderer(renderer)
 	{
@@ -16,7 +28,6 @@ namespace HexChess {
 		pipelineSpec.ShaderBinaries[ShaderStage::Fragment] = "Resources/Shaders/PieceShader.frag.spv";
 		pipelineSpec.VertexInput = {
 			VertexDataType::Float3,
-			VertexDataType::Float3,
 			VertexDataType::Float3
 		};
 
@@ -24,8 +35,9 @@ namespace HexChess {
 
 		m_PieceUniforms.ProjectionMatrix = glm::mat4(1.0f);
 		m_PieceUniforms.ViewMatrix = glm::mat4(1.0f);
-		m_PieceUniforms.ModelMatrix = glm::translate(glm::mat4(1.0f), {0.0f, 0.1f, 0.0f})
-			* glm::scale(glm::mat4(1.0f), glm::vec3(7.0f));
+
+		m_PiecePushConstant.ModelMatrix = glm::mat4(1.0f);
+		m_ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
 		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_PieceUniforms), &m_PieceUniforms);
 		m_Pipeline->WriteDescriptor("Uniforms", m_UniformBuffer);
@@ -56,6 +68,9 @@ namespace HexChess {
 
 	void PieceRenderer::RenderPiece(const Piece& piece)
 	{
+		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(piece.GetPieceType());
+		m_Pipeline->PushConstants("PieceConstants", sizeof(m_PiecePushConstant), &m_PiecePushConstant);
+
 		const auto& model = piece.GetModel();
 
 		m_Renderer->BindVertexBuffer(model.VertexBuffer);

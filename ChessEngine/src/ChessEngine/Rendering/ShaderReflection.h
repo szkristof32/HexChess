@@ -16,6 +16,14 @@ namespace ChessEngine {
 		Vertex, Fragment
 	};
 
+	struct PushConstantRange
+	{
+		std::string Name;
+		size_t Offset = 0;
+		size_t Size;
+		ShaderStage Stage;
+	};
+
 	struct ShaderResource
 	{
 		std::string Name;
@@ -34,6 +42,12 @@ namespace ChessEngine {
 		std::vector<ShaderResource> Resources;
 	};
 
-	void ReflectShaderStage(const std::vector<uint32_t>& code, ShaderStage stage, std::unordered_map<uint32_t, DescriptorSet>& reflectionData);
+	struct ShaderReflection
+	{
+		std::unordered_map<uint32_t, DescriptorSet> DescriptorSets;
+		std::vector<PushConstantRange> PushConstants;
+	};
+
+	void ReflectShaderStage(const std::vector<uint32_t>& code, ShaderStage stage, ShaderReflection& reflectionData);
 
 }

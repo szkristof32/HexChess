@@ -34,6 +34,7 @@ namespace ChessEngine {
 
 		void WriteDescriptor(std::string_view name, std::weak_ptr<UniformBuffer> uniformBuffer);
 		void WriteDescriptor(std::string_view name, std::weak_ptr<Image> image);
+		void PushConstants(std::string_view name, size_t dataSize, const void* data);
 
 		VkPipeline GetPipeline() const { return m_Pipeline; }
 		VkPipelineLayout GetPipelineLayout() const { return m_PipelineLayout; }
@@ -55,7 +56,7 @@ namespace ChessEngine {
 		VkPipeline m_Pipeline;
 		VkPipelineLayout m_PipelineLayout;
 
-		std::unordered_map<uint32_t, DescriptorSet> m_ReflectionData;
+		ShaderReflection m_ReflectionData;
 
 		VkDescriptorPool m_DescriptorPool;
 		uint32_t m_DescriptorCount = 0;

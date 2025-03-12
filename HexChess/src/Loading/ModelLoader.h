@@ -16,7 +16,6 @@ namespace HexChess {
 	struct Vertex
 	{
 		glm::vec3 Position;
-		glm::vec3 Colour;
 		glm::vec3 Normal;
 	};
 
@@ -26,7 +25,7 @@ namespace HexChess {
 		ModelLoader(const std::shared_ptr<ChessEngine::Renderer>& renderer);
 		~ModelLoader();
 
-		Model LoadModel(const std::filesystem::path& filepath, const glm::vec3& colour);
+		Model LoadModel(const std::filesystem::path& filepath);
 	private:
 		void ProcessNode(aiNode* node, const aiScene* scene);
 		void ProcessMesh(aiMesh* mesh, const aiScene* scene);
@@ -36,7 +35,6 @@ namespace HexChess {
 
 		std::vector<Vertex> m_Vertices;
 		std::vector<uint32_t> m_Indices;
-		glm::vec3 m_Colour;
 	};
 
 }

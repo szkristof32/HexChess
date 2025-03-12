@@ -182,6 +182,11 @@ namespace ChessEngine {
 		vkCmdDrawIndexed(m_CommandBuffers[m_FrameIndex], indexCount, 1, 0, 0, 0);
 	}
 
+	void RendererBackend::PushConstants(VkPipelineLayout layout, VkPipelineStageFlags stage, size_t offset, size_t dataSize, const void* data)
+	{
+		vkCmdPushConstants(m_CommandBuffers[m_FrameIndex], layout, stage, (uint32_t)offset, (uint32_t)dataSize, data);
+	}
+
 	VkCommandBuffer RendererBackend::AllocateNewCommandBuffer()
 	{
 		VkCommandBufferAllocateInfo allocInfo{};
