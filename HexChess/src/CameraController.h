@@ -27,9 +27,9 @@ namespace HexChess {
 	private:
 		std::shared_ptr<ChessEngine::Input> m_Input;
 
-		float m_Pitch = 60.0f;
+		float m_Pitch = 40.0f;
 		float m_AngleAroundCenter = 0.0f;
-		float m_Distance = 15.5f;
+		float m_Distance = 17.0f;
 
 		glm::vec3 m_Center;
 		glm::vec3 m_Position;

@@ -2,6 +2,7 @@
 #include "PieceRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <imgui.h>
 
 namespace HexChess {
 
@@ -10,10 +11,10 @@ namespace HexChess {
 
 	namespace PieceUtils {
 
-		static glm::vec3 PieceTypeColour(PieceType type)
+		static glm::vec3 PieceTypeColour(PieceType type, const glm::vec3& lightColour, const glm::vec3& darkColour)
 		{
-			if (type & PieceType::White)	return glm::vec3(0.95f);
-			if (type & PieceType::Black)	return glm::vec3(0.15f);
+			if (type & PieceType::White)	return lightColour;
+			if (type & PieceType::Black)	return darkColour;
 
 			return { 1.0f, 0.0f, 1.0f };
 		}
@@ -64,12 +65,13 @@ namespace HexChess {
 
 	void PieceRenderer::EndFrame()
 	{
+		RenderUI();
 	}
 
 	void PieceRenderer::RenderPiece(const Piece& piece, const glm::vec3& position)
 	{
 		m_PiecePushConstant.ModelMatrix = glm::translate(glm::mat4(1.0f), position) * m_ScaleMatrix;
-		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(piece.GetPieceType());
+		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(piece.GetPieceType(), m_LightColour, m_DarkColour);
 		m_Pipeline->PushConstants("PieceConstants", sizeof(m_PiecePushConstant), &m_PiecePushConstant);
 
 		const auto& model = piece.GetModel();
@@ -78,6 +80,24 @@ namespace HexChess {
 		m_Renderer->BindIndexBuffer(model.IndexBuffer);
 
 		m_Renderer->DrawIndexed(model.IndexCount);
+	}
+
+	void PieceRenderer::RenderUI()
+	{
+		ImGui::Begin("Piece configuration");
+
+		ImGui::ColorEdit3("Light colour", &m_LightColour.r);
+		ImGui::ColorEdit3("Dark colour", &m_DarkColour.r);
+
+		ImGui::Separator();
+
+		bool modified = ImGui::DragFloat("Piece size", &m_PieceSize, 0.01f, 0.0f, 100.0f);
+		if (modified)
+		{
+			m_ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(m_PieceSize));
+		}
+
+		ImGui::End();
 	}
 
 }

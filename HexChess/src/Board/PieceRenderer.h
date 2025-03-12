@@ -31,6 +31,8 @@ namespace HexChess {
 		
 		void RenderPiece(const Piece& piece, const glm::vec3& position = glm::vec3(0.0f));
 	private:
+		void RenderUI();
+	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 
 		std::shared_ptr<ChessEngine::Pipeline> m_Pipeline;
@@ -42,6 +44,10 @@ namespace HexChess {
 		glm::mat4 m_CachedProjectionMatrix;
 		glm::mat4 m_CachedViewMatrix;
 		glm::mat4 m_ScaleMatrix;
+
+		glm::vec3 m_LightColour = glm::vec3(0.95f);
+		glm::vec3 m_DarkColour = glm::vec3(0.15f);
+		float m_PieceSize = 2.0f;
 	};
 
 }

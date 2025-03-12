@@ -1,6 +1,8 @@
 #include <pch.h>
 #include "ChessGame.h"
 
+#include <imgui.h>
+
 namespace HexChess {
 
 	namespace BoardUtils {
@@ -35,7 +37,7 @@ namespace HexChess {
 			float xPosition = -distanceFromCenterX * size * 1.5f;
 			float yPosition = (distanceFromCenterY + fileOffset / 2.0f) * hexHeight;
 
-			return { xPosition, 0.0f, yPosition };
+			return { xPosition, boardConfig.Height / 2.0f, yPosition };
 		}
 
 	}

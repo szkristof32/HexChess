@@ -114,9 +114,12 @@ namespace HexChess {
 		modified |= ImGui::DragFloat("Inner size", &m_BoardConfig.InnerSize, 0.05f, 0.001f, m_BoardConfig.OuterSize - glm::epsilon<float>());
 		modified |= ImGui::DragFloat("Outer size", &m_BoardConfig.OuterSize, 0.05f, m_BoardConfig.OuterSize - glm::epsilon<float>());
 		modified |= ImGui::DragFloat("Height", &m_BoardConfig.Height, 0.05f, glm::epsilon<float>());
-		//modified |= ImGui::Checkbox("Flat topped", &m_BoardConfig.IsFlatTopped);
 
-		modified |= ImGui::Button("Regenerate board");
+		ImGui::Separator();
+
+		modified |= ImGui::ColorEdit3("Light colour", &m_BoardConfig.Colours[0].r);
+		modified |= ImGui::ColorEdit3("Medium colour", &m_BoardConfig.Colours[1].r);
+		modified |= ImGui::ColorEdit3("Dark colour", &m_BoardConfig.Colours[2].r);
 
 		if (modified)
 		{
