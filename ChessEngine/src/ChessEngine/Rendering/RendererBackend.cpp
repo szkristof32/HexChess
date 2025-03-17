@@ -596,8 +596,8 @@ namespace ChessEngine {
 
 	VkSampleCountFlagBits RendererBackend::GetMSAASamples()
 	{
-		constexpr bool forceDisableMSAA = true;
-		if (forceDisableMSAA)
+		constexpr bool forceDisableMSAA = false;
+		if constexpr (forceDisableMSAA)
 			return VK_SAMPLE_COUNT_1_BIT;
 
 		VkPhysicalDeviceProperties properties;

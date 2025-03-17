@@ -30,6 +30,7 @@ namespace ChessEngine {
 		void PushConstants(VkPipelineLayout layout, VkPipelineStageFlags stage, size_t offset, size_t dataSize, const void* data);
 
 		VkRenderPass GetSwapchainRenderPass() const { return m_SwapchainRenderPass; }
+		VkFramebuffer GetCurrentFramebuffer() const { return m_SwapchainFramebuffers[m_ImageIndex]; }
 		VkCommandBuffer GetCurrentCommandBuffer() const { return m_CommandBuffers[m_FrameIndex]; }
 		VkCommandBuffer AllocateNewCommandBuffer();
 		void SubmitCommandBuffer(VkCommandBuffer commandBuffer);

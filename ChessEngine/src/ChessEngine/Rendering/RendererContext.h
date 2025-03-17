@@ -53,6 +53,7 @@ namespace ChessEngine {
 		std::vector<const char*> GetInstanceExtensions();
 		std::vector<const char*> GetDeviceExtensions();
 		std::vector<const char*> GetValidationLayers();
+		void FilterNonEssentialExtensions(std::vector<const char*>& extensions) const;
 
 		bool IsDeviceSuitable(VkPhysicalDevice device);
 		QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
@@ -67,7 +68,7 @@ namespace ChessEngine {
 #endif
 	private:
 		VkInstance m_Instance;
-		VkPhysicalDevice m_PhysicalDevice;
+		VkPhysicalDevice m_PhysicalDevice = nullptr;
 		VkDevice m_Device;
 		VkSurfaceKHR m_Surface;
 

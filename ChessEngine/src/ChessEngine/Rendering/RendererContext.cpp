@@ -15,6 +15,11 @@ namespace ChessEngine {
 	#define DestroyDebugMessenger()
 #endif
 
+	static constexpr std::array NonEssentialExtensions = {
+			VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME,
+			VK_AMD_MIXED_ATTACHMENT_SAMPLES_EXTENSION_NAME
+	};
+
 	static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT severity, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* data, void*)
 	{
 		const char* color = COLOR_RESET;
@@ -152,6 +157,8 @@ namespace ChessEngine {
 				break;
 			}
 		}
+
+		assert(m_PhysicalDevice && "Failed to find suitable physical device!");
 	}
 
 	void RendererContext::CreateDevice()
@@ -166,6 +173,7 @@ namespace ChessEngine {
 		queueCreateInfo.pQueuePriorities = &queuePriority;
 
 		auto extensions = GetDeviceExtensions();
+		FilterNonEssentialExtensions(extensions);
 
 		VkPhysicalDeviceFeatures features{};
 		features.samplerAnisotropy = true;
@@ -210,7 +218,9 @@ namespace ChessEngine {
 	std::vector<const char*> RendererContext::GetDeviceExtensions()
 	{
 		std::vector<const char*> extensions = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_NV_FRAMEBUFFER_MIXED_SAMPLES_EXTENSION_NAME,
+			VK_AMD_MIXED_ATTACHMENT_SAMPLES_EXTENSION_NAME
 		};
 		return extensions;
 	}
@@ -223,6 +233,27 @@ namespace ChessEngine {
 #endif
 		};
 		return validationLayers;
+	}
+
+	void RendererContext::FilterNonEssentialExtensions(std::vector<const char*>& extensions) const
+	{
+		uint32_t extensionCount;
+		vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, nullptr);
+		std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+		vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, availableExtensions.data());
+
+		for (const auto& extension : NonEssentialExtensions)
+		{
+			if (std::find_if(availableExtensions.begin(), availableExtensions.end(),
+				[extension](const VkExtensionProperties& props)
+				{
+					return strcmp(props.extensionName, extension) == 0;
+				}) != availableExtensions.end())
+				continue;
+
+			auto it = std::find(extensions.begin(), extensions.end(), extension);
+			extensions.erase(it);
+		}
 	}
 
 	bool RendererContext::IsDeviceSuitable(VkPhysicalDevice device)
@@ -269,6 +300,11 @@ namespace ChessEngine {
 		for (const auto& extension : availableExtensions)
 		{
 			requiredExtensions.erase(extension.extensionName);
+		}
+
+		for (const auto& extension : NonEssentialExtensions)
+		{
+			requiredExtensions.erase(extension);
 		}
 
 		return requiredExtensions.empty();
