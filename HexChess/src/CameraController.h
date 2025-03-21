@@ -16,6 +16,7 @@ namespace HexChess {
 
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+		const glm::vec3& GetCameraPosition() const { return m_Position; }
 
 		void OnResize(uint32_t width, uint32_t height);
 	private:

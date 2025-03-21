@@ -43,6 +43,8 @@ namespace HexChess {
 
 		glm::mat4 m_CachedProjectionMatrix;
 		glm::mat4 m_CachedViewMatrix;
+
+		glm::mat4 m_RotationMatrix;
 		glm::mat4 m_ScaleMatrix;
 
 		glm::vec3 m_LightColour = glm::vec3(0.95f);

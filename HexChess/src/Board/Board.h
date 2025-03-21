@@ -4,10 +4,14 @@
 #include "Board/Piece.h"
 #include "Board/BoardGenerator.h"
 
+#include <ChessEngine/Core/Window.h>
+#include <ChessEngine/Core/Input.h>
 #include <ChessEngine/Rendering/Renderer.h>
 #include <ChessEngine/Rendering/Buffers.h>
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 namespace HexChess {
 
@@ -23,8 +27,9 @@ namespace HexChess {
 
 		const Model& GetModel() const { return m_Model; }
 		const BoardConfig& GetConfig() const { return m_BoardConfig; }
+		BoardGenerator& GetGenerator() { return m_Generator; }
 
-		const std::vector<Piece>& GetPieces() const { return m_Pieces; }
+		const std::unordered_map<glm::vec2, Piece>& GetPieces() const { return m_Pieces; }
 	private:
 		void GenerateBoard();
 		void GeneratePieces(std::string_view fen = DefaultFEN);
@@ -36,7 +41,7 @@ namespace HexChess {
 		BoardConfig m_BoardConfig;
 		BoardGenerator m_Generator;
 
-		std::vector<Piece> m_Pieces;
+		std::unordered_map<glm::vec2, Piece> m_Pieces;
 		std::shared_ptr<ModelRepository> m_ModelRepository;
 
 		Model m_Model;

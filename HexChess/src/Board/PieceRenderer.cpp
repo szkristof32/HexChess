@@ -11,12 +11,14 @@ namespace HexChess {
 
 	namespace PieceUtils {
 
+		static bool IsBlackPiece(PieceType type)
+		{
+			return (bool)(type & PieceType::Black);
+		}
+
 		static glm::vec3 PieceTypeColour(PieceType type, const glm::vec3& lightColour, const glm::vec3& darkColour)
 		{
-			if (type & PieceType::White)	return lightColour;
-			if (type & PieceType::Black)	return darkColour;
-
-			return { 1.0f, 0.0f, 1.0f };
+			return IsBlackPiece(type) ? darkColour : lightColour;
 		}
 
 	}
@@ -38,6 +40,7 @@ namespace HexChess {
 		m_PieceUniforms.ViewMatrix = glm::mat4(1.0f);
 
 		m_PiecePushConstant.ModelMatrix = glm::mat4(1.0f);
+		m_RotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), { 0.0f, 1.0f, 0.0f });
 		m_ScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(2.0f));
 
 		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_PieceUniforms), &m_PieceUniforms);
@@ -70,8 +73,12 @@ namespace HexChess {
 
 	void PieceRenderer::RenderPiece(const Piece& piece, const glm::vec3& position)
 	{
-		m_PiecePushConstant.ModelMatrix = glm::translate(glm::mat4(1.0f), position) * m_ScaleMatrix;
-		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(piece.GetPieceType(), m_LightColour, m_DarkColour);
+		auto pieceType = piece.GetPieceType();
+
+		m_PiecePushConstant.ModelMatrix = glm::translate(glm::mat4(1.0f), position)
+			* (PieceUtils::IsBlackPiece(pieceType) ? m_RotationMatrix : glm::mat4(1.0f))
+			* m_ScaleMatrix;
+		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(pieceType, m_LightColour, m_DarkColour);
 		m_Pipeline->PushConstants("PieceConstants", sizeof(m_PiecePushConstant), &m_PiecePushConstant);
 
 		const auto& model = piece.GetModel();

@@ -25,6 +25,7 @@ namespace HexChess {
 	class Piece
 	{
 	public:
+		Piece() = default;
 		Piece(PieceType type, ModelRepository& modelRepo);
 		~Piece();
 

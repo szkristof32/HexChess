@@ -3,6 +3,19 @@
 
 namespace HexChess {
 
+	static constexpr uint32_t GetCellCount(uint32_t gridSize)
+	{
+		uint32_t cellCount = (gridSize / 2 + 1) * gridSize;
+
+		for (uint32_t i = 1;i <= gridSize / 2;i++)
+			cellCount += gridSize - 2 * i;
+
+		return cellCount;
+	}
+
+	constexpr const uint32_t GridSize = 11;
+	constexpr const uint32_t CellCount = GetCellCount(GridSize);
+
 	BoardGenerator::BoardGenerator(BoardConfig& config)
 		: m_Config(config)
 	{
@@ -17,9 +30,6 @@ namespace HexChess {
 		m_Vertices.clear();
 		m_Indices.clear();
 
-		constexpr int32_t gridSizeX = 11;
-		constexpr int32_t gridSizeY = 11;
-
 		glm::vec3 offset = glm::vec3(0.0f);
 		if (m_Config.IsFlatTopped)
 		{
@@ -28,15 +38,15 @@ namespace HexChess {
 			float width = 2.0f * size;
 			float height = glm::sqrt(3.0f) * size;
 
-			float finalWidth = (gridSizeX / 2 * width) + (gridSizeX / 2 * (width / 2));
-			float finalHeight = (gridSizeY * height) - height;
+			float finalWidth = (GridSize / 2 * width) + (GridSize / 2 * (width / 2));
+			float finalHeight = (GridSize * height) - height;
 
 			offset = { finalWidth / 2.0f, 0.0f, finalHeight / 2.0f };
 		}
 
-		for (int32_t x = 0;x < gridSizeX;x++)
+		for (int32_t x = 0;x < GridSize;x++)
 		{
-			for (int32_t y = 0;y < gridSizeY;y++)
+			for (int32_t y = 0;y < GridSize;y++)
 			{
 				if (ShouldSkip(x, y))
 					continue;

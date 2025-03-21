@@ -97,7 +97,7 @@ namespace HexChess {
 
 			PieceType pieceType = PieceUtils::GetPieceColour(position) | PieceUtils::GetPieceType(position);
 
-			Piece& piece = m_Pieces.emplace_back(pieceType, *m_ModelRepository);
+			Piece& piece = m_Pieces[{file, rank}] = Piece(pieceType, *m_ModelRepository);
 			piece.SetFile(file);
 			piece.SetRank(rank);
 

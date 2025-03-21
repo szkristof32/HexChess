@@ -45,6 +45,7 @@ namespace HexChess {
 	void ChessGame::OnInit()
 	{
 		m_Renderer = GetRenderer();
+		m_Input = GetInput();
 		m_ModelRepository = std::make_shared<ModelRepository>(m_Renderer);
 
 		m_Board = std::make_unique<Board>(m_Renderer, m_ModelRepository);
@@ -60,6 +61,7 @@ namespace HexChess {
 		m_CameraController->Update(deltaInSeconds);
 
 		m_Board->OnUpdate();
+		ProcessInput();
 
 		m_BoardRenderer->BeginFrame(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
 		m_BoardRenderer->RenderBoard(*m_Board);
@@ -68,7 +70,7 @@ namespace HexChess {
 		m_PieceRenderer->BeginFrame(m_CameraController->GetProjectionMatrix(), m_CameraController->GetViewMatrix());
 		const auto& boardConfig = m_Board->GetConfig();
 		const auto& pieces = m_Board->GetPieces();
-		for (const auto& piece : pieces)
+		for (const auto& [position, piece] : pieces)
 		{
 			m_PieceRenderer->RenderPiece(piece, BoardUtils::GetPiecePosition(piece.GetFile(), piece.GetRank(), boardConfig));
 		}
@@ -78,6 +80,15 @@ namespace HexChess {
 	void ChessGame::OnResize(uint32_t width, uint32_t height)
 	{
 		m_CameraController->OnResize(width, height);
+
+		m_WindowWidth = width;
+		m_WindowHeight = height;
+	}
+
+	void ChessGame::ProcessInput()
+	{
+		glm::vec2 windowSize = { m_WindowWidth, m_WindowHeight };
+		glm::vec2 position = { m_Input->GetMouseX(), m_Input->GetMouseY() };
 	}
 
 }
