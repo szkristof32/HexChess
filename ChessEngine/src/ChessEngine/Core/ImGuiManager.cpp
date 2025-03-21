@@ -55,6 +55,7 @@ namespace ChessEngine {
 		initInfo.RenderPass = m_Backend->GetSwapchainRenderPass();
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = m_Backend->GetImageCount();
+		initInfo.MSAASamples = m_Backend->GetMaxMSAASamples();
 		initInfo.CheckVkResultFn = [](VkResult result) { VK_CHECK(result); };
 
 		ImGui_ImplVulkan_Init(&initInfo);
