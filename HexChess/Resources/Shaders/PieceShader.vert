@@ -9,6 +9,7 @@ struct ShaderOutput
 	vec3 Normal;
 	vec3 WorldPosition;
 	vec3 CameraPosition;
+	float IsSelected;
 };
 
 layout (location = 0) out ShaderOutput Output;
@@ -23,6 +24,7 @@ layout(push_constant) uniform PushConstants
 {
 	mat4 ModelMatrix;
 	vec3 Colour;
+	float IsSelected;
 } PieceConstants;
 
 void main()
@@ -34,6 +36,7 @@ void main()
 	Output.Normal = in_normal;
 	Output.WorldPosition = worldPostition.xyz;
 	Output.CameraPosition = (inverse(ViewMatrix) * vec4(0.0, 0.0, 1.0, 1.0)).xyz;
+	Output.IsSelected = PieceConstants.IsSelected;
 
 	gl_Position = projectionViewMatrix * worldPostition;
 }

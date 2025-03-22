@@ -52,7 +52,7 @@ namespace HexChess {
 
 		m_BoardRenderer = std::make_unique<BoardRenderer>(m_Renderer);
 		m_PieceRenderer = std::make_unique<PieceRenderer>(m_Renderer);
-		
+
 		m_CameraController = std::make_unique<CameraController>(GetInput());
 	}
 
@@ -88,7 +88,51 @@ namespace HexChess {
 	void ChessGame::ProcessInput()
 	{
 		glm::vec2 windowSize = { m_WindowWidth, m_WindowHeight };
-		glm::vec2 position = { m_Input->GetMouseX(), m_Input->GetMouseY() };
+		glm::vec2 position = { m_Input->GetMouseX(), windowSize.y - m_Input->GetMouseY() };
+
+		const auto& projectionMatrix = m_CameraController->GetProjectionMatrix();
+		const auto& viewMatrix = m_CameraController->GetViewMatrix();
+
+		glm::vec2 normalisedDeviceCoords = (2.0f * position) / windowSize - 1.0f;
+		glm::vec4 clipCoords = glm::vec4(normalisedDeviceCoords, -1.0f, 1.0f);
+		glm::vec4 eyeCoords = glm::vec4(glm::vec2(glm::inverse(projectionMatrix) * clipCoords), -1.0f, 0.0f);
+
+		glm::vec3 rayOrigin = m_CameraController->GetCameraPosition();
+		glm::vec3 rayDirection = glm::normalize(glm::inverse(viewMatrix) * eyeCoords);
+
+		float rayLength = RayPlaneIntersection(rayOrigin, rayDirection);
+		glm::vec3 worldPosition = rayOrigin + (rayDirection * rayLength);
+		glm::vec2 boardPosition = BoardUtils::GetBoardPoisition(worldPosition, m_Board->GetConfig().OuterSize);
+		m_BoardRenderer->SetExtraColouredCell(boardPosition);
+
+		if (m_Input->IsButtonPressed(0))
+		{
+			if (!m_CurrentHoldingPiece || (m_CurrentHoldingPiece && !m_CurrentHoldingPiece->IsValid()))
+			{
+				m_CurrentHoldingPiece = &m_Board->GetPieceAt((uint32_t)boardPosition.x, (uint32_t)boardPosition.y);
+				m_CurrentHoldingPiece->Select();
+			}
+			else
+			{
+				Move move{};
+				move.Start = { m_CurrentHoldingPiece->GetFile(), m_CurrentHoldingPiece->GetRank() };
+				move.Destination = boardPosition;
+
+				m_Board->TryMakeMove(move);
+				m_CurrentHoldingPiece->Select(false);
+				m_CurrentHoldingPiece = nullptr;
+			}
+		}
+	}
+
+	float ChessGame::RayPlaneIntersection(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) const
+	{
+		glm::vec3 planeCenter = glm::vec3(0.0f, m_Board->GetConfig().Height / 2.0f, 0.0f);
+		glm::vec3 planeNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		float d = glm::dot(planeCenter, -planeNormal);
+		float t = -(d + glm::dot(rayOrigin, planeNormal)) / glm::dot(rayDirection, planeNormal);
+		return t;
 	}
 
 }

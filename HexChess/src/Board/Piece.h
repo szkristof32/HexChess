@@ -7,6 +7,12 @@
 
 namespace HexChess {
 
+	struct Move
+	{
+		glm::vec2 Start;
+		glm::vec2 Destination;
+	};
+
 	enum class PieceType
 	{
 		None = 0,
@@ -36,12 +42,18 @@ namespace HexChess {
 		void SetFile(uint32_t file) { m_File = file; }
 		uint32_t GetRank() const { return m_Rank; }
 		void SetRank(uint32_t rank) { m_Rank = rank; }
+
+		bool IsValid() const { return m_Type != PieceType::None; }
+		void Select(bool select = true) { m_Selected = select; }
+		bool IsSelected() const { return m_Selected; }
 	private:
-		PieceType m_Type;
+		PieceType m_Type = PieceType::None;
 		Model m_Model;
 
 		uint32_t m_File = 0;
 		uint32_t m_Rank = 0;
+
+		bool m_Selected = false;
 	};
 
 }

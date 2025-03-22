@@ -50,6 +50,27 @@ namespace HexChess {
 		RenderUI();
 	}
 
+	Piece& Board::GetPieceAt(uint32_t file, uint32_t rank)
+	{
+		if (m_Pieces.contains({ file, rank }))
+			return m_Pieces.at({ file, rank });
+
+		return m_NullPiece;
+	}
+
+	bool Board::TryMakeMove(const Move& move)
+	{
+		if (!GetPieceAt((uint32_t)move.Start.x, (uint32_t)move.Start.y).IsValid())
+			return false;
+
+		Piece& piece = m_Pieces[move.Destination] = m_Pieces.at(move.Start);
+		piece.SetFile((uint32_t)move.Destination.x);
+		piece.SetRank((uint32_t)move.Destination.y);
+		m_Pieces.erase(move.Start);
+
+		return true;
+	}
+
 	void Board::GenerateBoard()
 	{
 		m_Generator.GenerateBoard();

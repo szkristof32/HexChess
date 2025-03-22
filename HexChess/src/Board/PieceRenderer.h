@@ -18,6 +18,7 @@ namespace HexChess {
 	{
 		glm::mat4 ModelMatrix;
 		glm::vec3 Colour;
+		float IsSelected = 0.0f;
 	};
 
 	class PieceRenderer

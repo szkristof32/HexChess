@@ -15,6 +15,11 @@ namespace HexChess {
 		glm::mat4 ModelMatrix;
 	};
 
+	struct BoardColouring
+	{
+		glm::vec2 ExtraColouredCell = glm::vec2(1000.0f);
+	};
+
 	class BoardRenderer
 	{
 	public:
@@ -25,6 +30,7 @@ namespace HexChess {
 		void EndFrame();
 
 		void RenderBoard(const Board& piece);
+		void SetExtraColouredCell(const glm::vec2& position) { m_BoardColouring.ExtraColouredCell = position; }
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 
@@ -32,6 +38,10 @@ namespace HexChess {
 
 		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBuffer;
 		BoardUniformBuffer m_BoardUniforms;
+
+		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBufferColouring;
+		BoardColouring m_BoardColouring{};
+		BoardColouring m_BoardColouringPrevFrame{};
 
 		glm::mat4 m_CachedProjectionMatrix;
 		glm::mat4 m_CachedViewMatrix;

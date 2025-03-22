@@ -1,7 +1,26 @@
 #include "pch.h"
 #include "BoardGenerator.h"
 
+#include <glm/glm.hpp>
+
 namespace HexChess {
+
+	namespace BoardUtils {
+
+		glm::vec2 GetBoardPoisition(const glm::vec3& worldPosition, float size)
+		{
+			float file = glm::round((worldPosition.x / (1.5f * size)) + 5);
+			float rank = glm::round(2.5f + (file / 2.0f) - (worldPosition.z / (glm::sqrt(3) * size)));
+
+			if (file > 5)
+				rank -= glm::abs(5 - file);
+			if (rank > 5)
+				file -= glm::abs(5 - rank);
+
+			return { file, rank };
+		}
+
+	}
 
 	static constexpr uint32_t GetCellCount(uint32_t gridSize)
 	{
@@ -44,9 +63,9 @@ namespace HexChess {
 			offset = { finalWidth / 2.0f, 0.0f, finalHeight / 2.0f };
 		}
 
-		for (int32_t x = 0;x < GridSize;x++)
+		for (int32_t y = 0;y < GridSize;y++)
 		{
-			for (int32_t y = 0;y < GridSize;y++)
+			for (int32_t x = 0;x < GridSize;x++)
 			{
 				if (ShouldSkip(x, y))
 					continue;
@@ -175,6 +194,7 @@ namespace HexChess {
 		vertex.Position = center + glm::vec3{ glm::cos(angle) * size, height, glm::sin(angle) * size };
 		vertex.Colour = { 0.2f, 0.4f, 0.8f };
 		vertex.Normal = { 0.0f, 1.0f, 0.0f };
+		vertex.BoardPosition = BoardUtils::GetBoardPoisition(center, m_Config.OuterSize);
 
 		return vertex;
 	}

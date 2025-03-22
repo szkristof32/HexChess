@@ -3,6 +3,7 @@
 layout (location = 0) in vec3 in_position;
 layout (location = 1) in vec3 in_colour;
 layout (location = 2) in vec3 in_normal;
+layout (location = 3) in vec2 in_boardPosition;
 
 struct ShaderOutput
 {
@@ -10,6 +11,7 @@ struct ShaderOutput
 	vec3 Normal;
 	vec3 WorldPosition;
 	vec3 CameraPosition;
+	vec2 BoardPosition;
 };
 
 layout (location = 0) out ShaderOutput Output;
@@ -30,6 +32,7 @@ void main()
 	Output.Normal = in_normal;
 	Output.WorldPosition = worldPostition.xyz;
 	Output.CameraPosition = (inverse(ViewMatrix) * vec4(0.0, 0.0, 1.0, 1.0)).xyz;
+	Output.BoardPosition = in_boardPosition;
 
 	gl_Position = projectionViewMatrix * worldPostition;
 }

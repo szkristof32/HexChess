@@ -17,7 +17,8 @@ namespace HexChess {
 		pipelineSpec.VertexInput = {
 			VertexDataType::Float3,
 			VertexDataType::Float3,
-			VertexDataType::Float3
+			VertexDataType::Float3,
+			VertexDataType::Float2
 		};
 
 		m_Pipeline = m_Renderer->CreatePipeline(pipelineSpec);
@@ -28,6 +29,9 @@ namespace HexChess {
 
 		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_BoardUniforms), &m_BoardUniforms);
 		m_Pipeline->WriteDescriptor("Uniforms", m_UniformBuffer);
+
+		m_UniformBufferColouring = m_Renderer->CreateUniformBuffer(sizeof(m_BoardColouring), &m_BoardColouring);
+		m_Pipeline->WriteDescriptor("Colouring", m_UniformBufferColouring);
 	}
 
 	BoardRenderer::~BoardRenderer()
@@ -51,11 +55,17 @@ namespace HexChess {
 
 	void BoardRenderer::EndFrame()
 	{
+		memcpy(&m_BoardColouringPrevFrame, &m_BoardColouring, sizeof(BoardColouring));
 	}
 
 	void BoardRenderer::RenderBoard(const Board& piece)
 	{
 		const auto& model = piece.GetModel();
+
+		if (memcmp(&m_BoardColouring, &m_BoardColouringPrevFrame, sizeof(BoardColouring)) != 0)
+		{
+			m_UniformBufferColouring->SetData(sizeof(m_BoardColouring), &m_BoardColouring);
+		}
 
 		m_Renderer->BindVertexBuffer(model.VertexBuffer);
 		m_Renderer->BindIndexBuffer(model.IndexBuffer);

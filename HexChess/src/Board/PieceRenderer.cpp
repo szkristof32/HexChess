@@ -79,6 +79,7 @@ namespace HexChess {
 			* (PieceUtils::IsBlackPiece(pieceType) ? m_RotationMatrix : glm::mat4(1.0f))
 			* m_ScaleMatrix;
 		m_PiecePushConstant.Colour = PieceUtils::PieceTypeColour(pieceType, m_LightColour, m_DarkColour);
+		m_PiecePushConstant.IsSelected = (float)piece.IsSelected();
 		m_Pipeline->PushConstants("PieceConstants", sizeof(m_PiecePushConstant), &m_PiecePushConstant);
 
 		const auto& model = piece.GetModel();

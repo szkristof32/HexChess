@@ -5,11 +5,18 @@
 
 namespace HexChess {
 
+	namespace BoardUtils {
+
+		inline glm::vec2 GetBoardPoisition(const glm::vec3& worldPosition, float size);
+
+	}
+
 	struct BoardVertex
 	{
 		glm::vec3 Position;
 		glm::vec3 Colour;
 		glm::vec3 Normal;
+		glm::vec2 BoardPosition;
 	};
 
 	struct BoardConfig

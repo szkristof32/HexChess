@@ -6,6 +6,7 @@ struct ShaderOutput
 	vec3 Normal;
 	vec3 WorldPosition;
 	vec3 CameraPosition;
+	float IsSelected;
 };
 
 layout (location = 0) in ShaderOutput Input;
@@ -20,5 +21,9 @@ void main()
 	vec3 lightVector = normalize(lightPosition - Input.WorldPosition);
 	float NdotL = dot(unitNormal, lightVector);
 
-	out_colour = vec4(Input.Colour * NdotL, 1.0);
+	vec3 colour = Input.Colour;
+	if (Input.IsSelected > 0.5)
+		colour += vec3(0.2, 0.1, 0.13);
+
+	out_colour = vec4(colour * NdotL, 1.0);
 }

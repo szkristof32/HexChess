@@ -30,6 +30,8 @@ namespace HexChess {
 		BoardGenerator& GetGenerator() { return m_Generator; }
 
 		const std::unordered_map<glm::vec2, Piece>& GetPieces() const { return m_Pieces; }
+		Piece& GetPieceAt(uint32_t file, uint32_t rank);
+		bool TryMakeMove(const Move& move);
 	private:
 		void GenerateBoard();
 		void GeneratePieces(std::string_view fen = DefaultFEN);
@@ -41,6 +43,7 @@ namespace HexChess {
 		BoardConfig m_BoardConfig;
 		BoardGenerator m_Generator;
 
+		Piece m_NullPiece;
 		std::unordered_map<glm::vec2, Piece> m_Pieces;
 		std::shared_ptr<ModelRepository> m_ModelRepository;
 
