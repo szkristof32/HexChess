@@ -34,7 +34,7 @@ namespace HexChess {
 	}
 
 	Board::Board(const std::shared_ptr<ChessEngine::Renderer>& renderer, const std::shared_ptr<ModelRepository>& modelRepository)
-		: m_Renderer(renderer), m_Generator(m_BoardConfig), m_ModelRepository(modelRepository)
+		: m_Renderer(renderer), m_Generator(m_BoardConfig), m_ModelRepository(modelRepository), m_MoveGenerator(m_Pieces)
 	{
 		m_BoardConfig.IsFlatTopped = true;
 		GenerateBoard();
@@ -61,6 +61,10 @@ namespace HexChess {
 	bool Board::TryMakeMove(const Move& move)
 	{
 		if (!GetPieceAt((uint32_t)move.Start.x, (uint32_t)move.Start.y).IsValid())
+			return false;
+
+		auto moves = m_MoveGenerator.GenerateMoves(m_Pieces.at(move.Start));
+		if (std::find(moves.begin(), moves.end(), move) == moves.end())
 			return false;
 
 		Piece& piece = m_Pieces[move.Destination] = m_Pieces.at(move.Start);

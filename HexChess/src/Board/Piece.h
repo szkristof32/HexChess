@@ -11,6 +11,15 @@ namespace HexChess {
 	{
 		glm::vec2 Start;
 		glm::vec2 Destination;
+
+		inline bool operator==(const Move& other) const
+		{
+			return Start == other.Start && Destination == other.Destination;
+		}
+		inline bool operator!=(const Move& other) const
+		{
+			return !(*this == other);
+		}
 	};
 
 	enum class PieceType
@@ -55,5 +64,18 @@ namespace HexChess {
 
 		bool m_Selected = false;
 	};
+
+	namespace PieceContstants {
+
+		const inline std::vector<glm::vec2> PawnStartLocationsWhite = {
+			{ 1, 0 }, { 2, 1 }, { 3, 2 }, { 4, 3 }, { 5, 4 },
+			{ 9, 0 }, { 8, 1 }, { 7, 2 }, { 6, 3 }
+		};
+		const inline std::vector<glm::vec2> PawnStartLocationsBlack = {
+			{ 0, 6 }, { 1, 6 }, { 2, 6 }, { 3, 6 }, { 4, 6 },
+			{ 8, 6 }, { 7, 6 }, { 6, 6 }, { 5, 6 }
+		};
+
+	}
 
 }

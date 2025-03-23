@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Model.h"
+
 #include "Board/Piece.h"
 #include "Board/BoardGenerator.h"
+#include "Board/MoveGenerator.h"
 
 #include <ChessEngine/Core/Window.h>
 #include <ChessEngine/Core/Input.h>
@@ -45,6 +47,7 @@ namespace HexChess {
 
 		Piece m_NullPiece;
 		std::unordered_map<glm::vec2, Piece> m_Pieces;
+		MoveGenerator m_MoveGenerator;
 		std::shared_ptr<ModelRepository> m_ModelRepository;
 
 		Model m_Model;
