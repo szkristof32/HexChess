@@ -7,7 +7,7 @@ namespace ChessEngine {
 	enum class ShaderResourceType
 	{
 		None = 0,
-		Uniform, Sampler
+		Uniform, Sampler, Storage
 	};
 
 	enum class ShaderStage

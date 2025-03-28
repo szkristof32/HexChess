@@ -144,4 +144,40 @@ namespace ChessEngine {
 		vkUnmapMemory(m_Context->GetDevice(), m_Memory);
 	}
 
+	StorageBuffer::StorageBuffer(size_t dataSize, const void* data, const std::shared_ptr<RendererContext>& context, const std::shared_ptr<RendererBackend>& backend)
+		: m_Context(context), m_Backend(backend)
+	{
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, m_Context->GetDevice(), &m_Buffer);
+		BufferUtils::AllocateMemory(m_Buffer, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_Context, &m_Memory);
+
+		SetData(dataSize, data);
+	}
+
+	StorageBuffer::~StorageBuffer()
+	{
+		vkFreeMemory(m_Context->GetDevice(), m_Memory, nullptr);
+		vkDestroyBuffer(m_Context->GetDevice(), m_Buffer, nullptr);
+	}
+
+	void StorageBuffer::SetData(size_t dataSize, const void* data)
+	{
+		VkBuffer stagingBuffer;
+		VkDeviceMemory stagingBufferMemory;
+
+		BufferUtils::CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_Context->GetDevice(), &stagingBuffer);
+		BufferUtils::AllocateMemory(stagingBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_Context, &stagingBufferMemory);
+
+		void* mapped;
+		vkMapMemory(m_Context->GetDevice(), stagingBufferMemory, 0, dataSize, 0, &mapped);
+		memcpy(mapped, data, dataSize);
+		vkUnmapMemory(m_Context->GetDevice(), stagingBufferMemory);
+
+		VkCommandBuffer commandBuffer = m_Backend->AllocateNewCommandBuffer();
+		BufferUtils::CopyFromBuffer(stagingBuffer, m_Buffer, dataSize, commandBuffer);
+		m_Backend->SubmitCommandBuffer(commandBuffer);
+
+		vkFreeMemory(m_Context->GetDevice(), stagingBufferMemory, nullptr);
+		vkDestroyBuffer(m_Context->GetDevice(), stagingBuffer, nullptr);
+	}
+
 }

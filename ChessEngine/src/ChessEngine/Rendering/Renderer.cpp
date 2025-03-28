@@ -55,6 +55,11 @@ namespace ChessEngine {
 		return std::make_shared<UniformBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
 	}
 
+	std::shared_ptr<StorageBuffer> Renderer::CreateStorageBuffer(size_t dataSize, const void* data)
+	{
+		return std::make_shared<StorageBuffer>(dataSize, data, m_RendererContext, m_RendererBackend);
+	}
+
 	std::shared_ptr<Image> Renderer::CreateImage(const std::filesystem::path& filepath)
 	{
 		return std::make_shared<Image>(filepath, m_RendererContext, m_RendererBackend);

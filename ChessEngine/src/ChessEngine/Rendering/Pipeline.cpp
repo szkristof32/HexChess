@@ -73,6 +73,7 @@ namespace ChessEngine {
 			{
 				case ShaderResourceType::Uniform:	return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				case ShaderResourceType::Sampler:	return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				case ShaderResourceType::Storage:	return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			}
 
 			return (VkDescriptorType)-1;
@@ -113,6 +114,27 @@ namespace ChessEngine {
 		descriptorWrite.dstBinding = shaderResource.Binding;
 		descriptorWrite.dstArrayElement = 0;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = shaderResource.DescriptorCount;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &descriptorWrite, 0, nullptr);
+	}
+
+	void Pipeline::WriteDescriptor(std::string_view name, std::weak_ptr<StorageBuffer> storageBuffer)
+	{
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = storageBuffer.lock()->GetBuffer();
+		bufferInfo.offset = 0;
+		bufferInfo.range = VK_WHOLE_SIZE;
+
+		auto shaderResource = FindShaderResource(name, ShaderResourceType::Storage);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSets[shaderResource.DescriptorSetIndex];
+		descriptorWrite.dstBinding = shaderResource.Binding;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		descriptorWrite.descriptorCount = shaderResource.DescriptorCount;
 		descriptorWrite.pBufferInfo = &bufferInfo;
 

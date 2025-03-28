@@ -50,6 +50,30 @@ namespace ChessEngine {
 			uniformBuffer.DescriptorCount = 1;
 			uniformBuffer.DescriptorSetIndex = descriptorSet;
 		}
+		for (const auto& resource : resources.storage_buffers)
+		{
+			auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
+			if (activeBuffers.empty())
+				continue;
+
+			const auto& name = resource.name;
+			auto& bufferType = compiler.get_type(resource.base_type_id);
+			int memberCount = (uint32_t)bufferType.member_types.size();
+			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t descriptorSet = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			auto size = (uint32_t)compiler.get_declared_struct_size(bufferType);
+
+			DescriptorSet& shaderDescriptorSet = reflectionData.DescriptorSets[descriptorSet];
+
+			ShaderResource& storageBuffer = shaderDescriptorSet.Resources.emplace_back();
+			storageBuffer.Type = ShaderResourceType::Storage;
+			storageBuffer.Binding = binding;
+			storageBuffer.Size = size;
+			storageBuffer.Name = name;
+			storageBuffer.Stage = stage;
+			storageBuffer.DescriptorCount = 1;
+			storageBuffer.DescriptorSetIndex = descriptorSet;
+		}
 		for (const auto& resource : resources.sampled_images)
 		{
 			const auto& name = resource.name;

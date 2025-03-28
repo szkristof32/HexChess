@@ -13,9 +13,10 @@ layout (location = 0) in ShaderOutput Input;
 
 layout (location = 0) out vec4 out_colour;
 
-layout (set = 1) uniform Colouring
+layout (std140, set = 1) readonly buffer Marking
 {
-	vec2 ExtraColouredCell;
+	vec2 SelectedCell;
+	vec4 MoveCells[21];
 };
 
 void main()
@@ -27,8 +28,17 @@ void main()
 	float NdotL = dot(unitNormal, lightVector);
 
 	vec3 colour = Input.Colour;
-	if (ExtraColouredCell == Input.BoardPosition)
+	if (SelectedCell == Input.BoardPosition)
 		colour += vec3(0.2, 0.1, 0.13);
+
+	for (int i = 0;i < 21;i++)
+	{
+		if (MoveCells[i].xy == Input.BoardPosition || MoveCells[i].zw == Input.BoardPosition)
+		{
+			colour *= vec3(0.05, 0.02, 0.45);
+			break;
+		}
+	}
 
 	out_colour = vec4(colour * NdotL, 1.0);
 }

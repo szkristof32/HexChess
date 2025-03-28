@@ -103,7 +103,7 @@ namespace HexChess {
 		float rayLength = RayPlaneIntersection(rayOrigin, rayDirection);
 		glm::vec3 worldPosition = rayOrigin + (rayDirection * rayLength);
 		glm::vec2 boardPosition = BoardUtils::GetBoardPoisition(worldPosition, m_Board->GetConfig().OuterSize);
-		m_BoardRenderer->SetExtraColouredCell(boardPosition);
+		m_BoardRenderer->SetSelectedCell(boardPosition);
 
 		if (m_Input->IsButtonPressed(0))
 		{
@@ -111,6 +111,7 @@ namespace HexChess {
 			{
 				m_CurrentHoldingPiece = &m_Board->GetPieceAt((uint32_t)boardPosition.x, (uint32_t)boardPosition.y);
 				m_CurrentHoldingPiece->Select();
+				m_Board->CalculateMoves(*m_CurrentHoldingPiece);
 			}
 			else
 			{

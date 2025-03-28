@@ -63,14 +63,19 @@ namespace HexChess {
 		if (!GetPieceAt((uint32_t)move.Start.x, (uint32_t)move.Start.y).IsValid())
 			return false;
 
-		auto moves = m_MoveGenerator.GenerateMoves(m_Pieces.at(move.Start));
-		if (std::find(moves.begin(), moves.end(), move) == moves.end())
+		m_CurrentMoves = m_MoveGenerator.GenerateMoves(m_Pieces.at(move.Start));
+		if (std::find(m_CurrentMoves.begin(), m_CurrentMoves.end(), move) == m_CurrentMoves.end())
+		{
+			m_CurrentMoves.clear();
 			return false;
+		}
 
 		Piece& piece = m_Pieces[move.Destination] = m_Pieces.at(move.Start);
 		piece.SetFile((uint32_t)move.Destination.x);
 		piece.SetRank((uint32_t)move.Destination.y);
 		m_Pieces.erase(move.Start);
+
+		m_CurrentMoves.clear();
 
 		return true;
 	}

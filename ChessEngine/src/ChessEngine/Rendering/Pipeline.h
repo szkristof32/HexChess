@@ -33,6 +33,7 @@ namespace ChessEngine {
 		~Pipeline();
 
 		void WriteDescriptor(std::string_view name, std::weak_ptr<UniformBuffer> uniformBuffer);
+		void WriteDescriptor(std::string_view name, std::weak_ptr<StorageBuffer> storageBuffer);
 		void WriteDescriptor(std::string_view name, std::weak_ptr<Image> image);
 		void PushConstants(std::string_view name, size_t dataSize, const void* data);
 

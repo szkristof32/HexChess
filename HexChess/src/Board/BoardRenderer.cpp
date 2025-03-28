@@ -30,8 +30,8 @@ namespace HexChess {
 		m_UniformBuffer = m_Renderer->CreateUniformBuffer(sizeof(m_BoardUniforms), &m_BoardUniforms);
 		m_Pipeline->WriteDescriptor("Uniforms", m_UniformBuffer);
 
-		m_UniformBufferColouring = m_Renderer->CreateUniformBuffer(sizeof(m_BoardColouring), &m_BoardColouring);
-		m_Pipeline->WriteDescriptor("Colouring", m_UniformBufferColouring);
+		m_StorageBufferMarking = m_Renderer->CreateStorageBuffer(sizeof(m_BoardMarking), &m_BoardMarking);
+		m_Pipeline->WriteDescriptor("Marking", m_StorageBufferMarking);
 	}
 
 	BoardRenderer::~BoardRenderer()
@@ -55,17 +55,29 @@ namespace HexChess {
 
 	void BoardRenderer::EndFrame()
 	{
-		memcpy(&m_BoardColouringPrevFrame, &m_BoardColouring, sizeof(BoardColouring));
 	}
 
-	void BoardRenderer::RenderBoard(const Board& piece)
+	void BoardRenderer::RenderBoard(const Board& board)
 	{
-		const auto& model = piece.GetModel();
+		const auto& model = board.GetModel();
 
-		if (memcmp(&m_BoardColouring, &m_BoardColouringPrevFrame, sizeof(BoardColouring)) != 0)
+		const auto& moves = board.GetCurrentMoves();
+		for (uint32_t i = 0;i < 42;i++)
 		{
-			m_UniformBufferColouring->SetData(sizeof(m_BoardColouring), &m_BoardColouring);
+			glm::vec2 cell = i < moves.size() ? moves[i].Destination : glm::vec2(1000.0f);
+
+			if (i % 2 == 0)
+			{
+				m_BoardMarking.MoveCells[i / 2].x = cell.x;
+				m_BoardMarking.MoveCells[i / 2].y = cell.y;
+			}
+			else
+			{
+				m_BoardMarking.MoveCells[i / 2].z = cell.x;
+				m_BoardMarking.MoveCells[i / 2].w = cell.y;
+			}
 		}
+		m_StorageBufferMarking->SetData(sizeof(m_BoardMarking), &m_BoardMarking);
 
 		m_Renderer->BindVertexBuffer(model.VertexBuffer);
 		m_Renderer->BindIndexBuffer(model.IndexBuffer);

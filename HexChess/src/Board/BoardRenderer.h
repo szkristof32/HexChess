@@ -15,9 +15,10 @@ namespace HexChess {
 		glm::mat4 ModelMatrix;
 	};
 
-	struct BoardColouring
+	struct BoardMarking
 	{
-		glm::vec2 ExtraColouredCell = glm::vec2(1000.0f);
+		alignas(16) glm::vec2 SelectedCell;
+		alignas(16) glm::vec4 MoveCells[21];
 	};
 
 	class BoardRenderer
@@ -29,8 +30,8 @@ namespace HexChess {
 		void BeginFrame(const glm::mat4& projectionMatrix, const glm::mat4& viewMatrix);
 		void EndFrame();
 
-		void RenderBoard(const Board& piece);
-		void SetExtraColouredCell(const glm::vec2& position) { m_BoardColouring.ExtraColouredCell = position; }
+		void RenderBoard(const Board& board);
+		void SetSelectedCell(const glm::vec2& position) { m_BoardMarking.SelectedCell = position; }
 	private:
 		std::shared_ptr<ChessEngine::Renderer> m_Renderer;
 
@@ -39,9 +40,8 @@ namespace HexChess {
 		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBuffer;
 		BoardUniformBuffer m_BoardUniforms;
 
-		std::shared_ptr<ChessEngine::UniformBuffer> m_UniformBufferColouring;
-		BoardColouring m_BoardColouring{};
-		BoardColouring m_BoardColouringPrevFrame{};
+		std::shared_ptr<ChessEngine::StorageBuffer> m_StorageBufferMarking;
+		BoardMarking m_BoardMarking{};
 
 		glm::mat4 m_CachedProjectionMatrix;
 		glm::mat4 m_CachedViewMatrix;

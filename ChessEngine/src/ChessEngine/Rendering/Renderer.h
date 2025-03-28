@@ -29,6 +29,7 @@ namespace ChessEngine {
 		std::shared_ptr<VertexBuffer> CreateVertexBuffer(size_t dataSize, const void* data);
 		std::shared_ptr<IndexBuffer> CreateIndexBuffer(size_t indexCount, const uint32_t* data);
 		std::shared_ptr<UniformBuffer> CreateUniformBuffer(size_t dataSize, const void* data);
+		std::shared_ptr<StorageBuffer> CreateStorageBuffer(size_t dataSize, const void* data);
 
 		std::shared_ptr<Image> CreateImage(const std::filesystem::path& filepath);
 
