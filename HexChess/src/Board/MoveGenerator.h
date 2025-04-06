@@ -16,19 +16,24 @@ namespace HexChess {
 		MoveGenerator(const PieceCollection& pieces);
 		~MoveGenerator();
 
-		std::vector<Move> GenerateMoves(const Piece& piece);
+		const std::vector<Move>& GenerateMoves(const Piece& piece);
 	private:
-		std::vector<Move> GeneratePawnMoves(const Piece& piece);
-		std::vector<Move> GenerateKnightMoves(const Piece& piece);
-		std::vector<Move> GenerateBishopMoves(const Piece& piece);
-		std::vector<Move> GenerateRookMoves(const Piece& piece);
-		std::vector<Move> GenerateQueenMoves(const Piece& piece);
-		std::vector<Move> GenerateKingMoves(const Piece& piece);
+		void GeneratePawnMoves(const Piece& piece);
+		void GenerateKnightMoves(const Piece& piece);
+		void GenerateBishopMoves(const Piece& piece);
+		void GenerateRookMoves(const Piece& piece);
+		void GenerateQueenMoves(const Piece& piece);
+		void GenerateKingMoves(const Piece& piece);
 
 		PieceType PieceAt(uint32_t file, uint32_t rank) const;
 		bool IsPieceAtAny(uint32_t file, uint32_t rank, const std::vector<glm::vec2>& positions) const;
+		uint32_t GetRankCentre(uint32_t rank) const { return rank <= 5 ? 5 : 10 - rank; }
+		uint32_t GetRankLength(uint32_t rank) const { return rank <= 5 ? 11 : 21 - (2 * rank); }
+		void AddMove(const Piece& piece, uint32_t fileOffset, uint32_t rankOffset, bool relativeToCentre = true);
 	private:
 		const PieceCollection& m_Pieces;
+
+		std::vector<Move> m_Moves;
 	};
 
 }

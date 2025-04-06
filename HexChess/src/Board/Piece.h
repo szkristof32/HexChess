@@ -33,8 +33,8 @@ namespace HexChess {
 		Queen = 0x10,
 		King = 0x20,
 
-		White = 0x100,
-		Black = 0x200
+		White = 0x40,
+		Black = 0x80
 	};
 
 	class Piece

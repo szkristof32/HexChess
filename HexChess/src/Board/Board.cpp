@@ -38,7 +38,7 @@ namespace HexChess {
 	{
 		m_BoardConfig.IsFlatTopped = true;
 		GenerateBoard();
-		GeneratePieces();
+		GeneratePieces("1/3/5/7/9/11/11/7N3/11/11/11");
 	}
 
 	Board::~Board()
